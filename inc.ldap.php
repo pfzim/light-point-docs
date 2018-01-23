@@ -80,7 +80,7 @@ class LDAP
 	}
 
 	// needed for check user password
-	public function switch_user($ldap_user, $ldap_passwd, $force_connect = FALSE)
+	public function reset_user($ldap_user, $ldap_passwd, $force_connect = FALSE)
 	{
 		$this->ldap_user = $ldap_user;
 		$this->ldap_passwd = $ldap_passwd;

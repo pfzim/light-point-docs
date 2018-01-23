@@ -52,7 +52,7 @@ class UserPermissions
 				$sr = ldap_search($link, LDAP_BASE_DN, '(&(objectClass=user)(sAMAccountName='.ldap_escape($this->user_sam, null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$row[0].'))', array('samaccountname', 'objectsid'));
 				if(!$sr)
 				{
-					for($i = 0; $i < 10; $i++)
+					for($i = 0; $i < LPD_ACCESS_LAST_BIT; $i++)
 					{
 						$this->rights[$object_id][$i] = chr(ord($this->rights[$object_id][$i]) | ord($row[1][$i]));
 					}
@@ -66,7 +66,7 @@ class UserPermissions
 	{
 		if(empty($this->user_sam))
 		{
-			return FALSE
+			return FALSE;
 		}
 
 		if(!isset($this->rights[$object_id]))
