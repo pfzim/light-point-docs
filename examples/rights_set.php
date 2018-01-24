@@ -20,23 +20,23 @@ require_once('inc.utils.php');
 
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, FALSE);
 	
+	$oid = 0;
 	$bits = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 	$update = 0;
 	
-	if($db->select(rpv("SELECT bits FROM @access WHERE oid = # AND dn = ! LIMIT 1", 1, "")))
+	if($db->select(rpv("SELECT bits FROM @access WHERE oid = # AND dn = ! LIMIT 1", $oid, "")))
 	{
 		$bits = $db->data[0][0];
 		$update = 1;
 	}
 	
 	set_rights_bit($bits, LPD_ACCESS_READ);
-	unset_rights_bit($bits, LPD_ACCESS_WRITE);
-	set_rights_bit($bits, 34);
+	set_rights_bit($bits, LPD_ACCESS_WRITE);
 	
-	echo rpv("UPDATE @access SET bits = '?' WHERE oid = # AND dn = ! LIMIT 1", sql_escape($bits), 1, "")."\n";
+	echo rpv("UPDATE @access SET bits = '?' WHERE oid = # AND dn = ! LIMIT 1", sql_escape($bits), $oid, "")."\n";
 	if($update)
 	{
-		if($db->put(rpv("UPDATE @access SET bits = '?' WHERE oid = # AND dn = ! LIMIT 1", sql_escape($bits), 1, "")))
+		if($db->put(rpv("UPDATE @access SET bits = '?' WHERE oid = # AND dn = ! LIMIT 1", sql_escape($bits), $oid, "")))
 		{
 			echo "UPDATE OK";
 		}
@@ -47,7 +47,7 @@ require_once('inc.utils.php');
 	}
 	else
 	{
-		if($db->put(rpv("INSERT INTO @access (bits, oid, dn) VALUES ('?', #, !)", sql_escape($bits), 1, "")))
+		if($db->put(rpv("INSERT INTO @access (bits, oid, dn) VALUES ('?', #, !)", sql_escape($bits), $oid, "")))
 		{
 			echo "INSERT OK";
 		}

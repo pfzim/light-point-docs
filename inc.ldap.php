@@ -102,7 +102,7 @@ class LDAP
 		return TRUE;
 	}
 	
-	public function get_link($db_name)
+	public function get_link()
 	{
 		if(!$this->link)
 		{

@@ -81,6 +81,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 	require_once('inc.db.php');
 	require_once('inc.ldap.php');
 	require_once('inc.access.php');
+	require_once('inc.rights.php');
 	require_once('inc.utils.php');
 
 	$action = "";
@@ -113,7 +114,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, FALSE);
 	$ldap = new LDAP(LDAP_HOST, LDAP_PORT, LDAP_USER, LDAP_PASSWD, FALSE);
-	$user_perm = new UserPermissions($db, $ldap, NULL);
+	$user_perm = new UserPermissions($db, $ldap, @$_SESSION['login']);
 
 	$uid = 0;
 	if(isset($_SESSION['uid']))
@@ -125,10 +126,11 @@ function php_mailer($to, $name, $subject, $html, $plain)
 	{
 		if(!empty($_COOKIE['zh']) && !empty($_COOKIE['zl']))
 		{
-			if($db->select(rpv("SELECT m.`id` FROM @users AS m WHERE m.`login` = ! AND m.`sid` IS NOT NULL AND m.`sid` = ! AND m.`deleted` = 0 LIMIT 1", $_COOKIE['zl'], $_COOKIE['zh'])))
+			if($db->select(rpv("SELECT m.`id`, m.`login` FROM @users AS m WHERE m.`login` = ! AND m.`sid` IS NOT NULL AND m.`sid` = ! AND m.`deleted` = 0 LIMIT 1", $_COOKIE['zl'], $_COOKIE['zh'])))
 			{
 				$_SESSION['uid'] = $db->data[0][0];
 				$uid = $_SESSION['uid'];
+				$_SESSION['login'] = $db->data[0][1];
 				setcookie("zh", $_COOKIE['zh'], time()+2592000, '/');
 				setcookie("zl", $_COOKIE['zl'], time()+2592000, '/');
 			}
@@ -181,11 +183,13 @@ function php_mailer($to, $name, $subject, $html, $plain)
 						exit;
 					}
 					$_SESSION['uid'] = $db->data[0][0];
+					$_SESSION['login'] = $login;
 				}
 				else // add new LDAP user
 				{
 					$db->put(rpv("INSERT INTO @users (login) VALUES (!)", $login));
 					$_SESSION['uid'] = $db->last_id();
+					$_SESSION['login'] = $login;
 				}
 
 				$uid = $_SESSION['uid'];
@@ -214,6 +218,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			$db->put(rpv("UPDATE @users SET `sid` = NULL WHERE `id` = # LIMIT 1", $uid));
 			$_SESSION['uid'] = 0;
 			$uid = $_SESSION['uid'];
+			$_SESSION['login'] = "";
+			$user_perm->reset_user();
 			setcookie("zh", NULL, time()-60, '/');
 			setcookie("zl", NULL, time()-60, '/');
 
@@ -497,6 +503,13 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		exit;
 	}
 
+	if(!$user_perm->check_permission(0, LPD_ACCESS_READ))
+	{
+		$error_msg = "Access denied!";
+		include('templ/tpl.message.php');
+		exit;
+	}
+		
 	header("Content-Type: text/html; charset=utf-8");
 
 	$db->select(rpv("SELECT m.`id`, m.`samname`, m.`fname`, m.`lname`, m.`dep`, m.`org`, m.`pos`, m.`pint`, m.`pcell`, m.`mail`, m.`photo`, m.`map`, m.`x`, m.`y`, m.`visible` FROM `@contacts` AS m WHERE m.`visible` = 1 ORDER BY m.`lname`, m.`fname`"));

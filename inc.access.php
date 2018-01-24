@@ -29,9 +29,10 @@ class UserPermissions
 		$this->user_sam = $user_sam;
 		$this->db = $db;
 		$this->ldap = $ldap;
+		$this->rights = array();
 	}
 
-	public function reset_user($user_sam)
+	public function reset_user($user_sam = NULL)
 	{
 		$this->user_sam = $user_sam;
 		$this->rights = array();
@@ -45,12 +46,12 @@ class UserPermissions
 
 		if($link && $this->db->select(rpv("SELECT dn, bits FROM @access WHERE oid = #", $object_id)))
 		{
-			foreach($db->data as $row)
+			foreach($this->db->data as $row)
 			{
 				$cookie = "";
 				ldap_control_paged_result($link, 2, true, $cookie);
 				$sr = ldap_search($link, LDAP_BASE_DN, '(&(objectClass=user)(sAMAccountName='.ldap_escape($this->user_sam, null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$row[0].'))', array('samaccountname', 'objectsid'));
-				if(!$sr)
+				if($sr)
 				{
 					for($i = 0; $i < LPD_ACCESS_LAST_BIT; $i++)
 					{
