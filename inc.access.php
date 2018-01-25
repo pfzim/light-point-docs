@@ -50,12 +50,17 @@ class UserPermissions
 			{
 				$cookie = "";
 				ldap_control_paged_result($link, 2, true, $cookie);
+				//echo '(&(objectClass=user)(sAMAccountName='.ldap_escape($this->user_sam, null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$row[0].'))';
 				$sr = ldap_search($link, LDAP_BASE_DN, '(&(objectClass=user)(sAMAccountName='.ldap_escape($this->user_sam, null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$row[0].'))', array('samaccountname', 'objectsid'));
 				if($sr)
 				{
-					for($i = 0; $i < LPD_ACCESS_LAST_BIT; $i++)
+					$records = ldap_get_entries($link, $sr);
+					if($records && ($records['count'] == 1))
 					{
-						$this->rights[$object_id][$i] = chr(ord($this->rights[$object_id][$i]) | ord($row[1][$i]));
+						for($i = 0; $i < LPD_ACCESS_LAST_BIT; $i++)
+						{
+							$this->rights[$object_id][$i] = chr(ord($this->rights[$object_id][$i]) | ord($row[1][$i]));
+						}
 					}
 				}
 				ldap_free_result($sr);

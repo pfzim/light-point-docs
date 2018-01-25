@@ -1,5 +1,5 @@
 <?php include("tpl.header.php"); ?>
-		<h3 align="center">LDAP Phonebook</h3>
+		<h3 align="center">Light Point Docs</h3>
 		<div id="imgblock" class="user-photo"><img id="userphoto" src=""/></div>
 		<input type="text" id="search" class="form-field" onkeyup="filter_table()" placeholder="Search..">
 		<?php if($uid) { ?>
