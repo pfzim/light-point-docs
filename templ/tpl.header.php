@@ -6,7 +6,7 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<title>Light Point Docs</title>
 		<link type="text/css" href="templ/style.css" rel="stylesheet" />
-		<script src="pb.js"></script>
+		<script src="lpd.js"></script>
 	</head>
 	<body>
 		<ul class="menu-bar">

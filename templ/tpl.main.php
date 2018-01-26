@@ -3,24 +3,29 @@
 		<div id="imgblock" class="user-photo"><img id="userphoto" src=""/></div>
 		<input type="text" id="search" class="form-field" onkeyup="filter_table()" placeholder="Search..">
 		<?php if($uid) { ?>
-		<span class="command f-right" onclick="f_edit(null);">Add contact</span>
+		<span class="command f-right" onclick="f_edit(null);">Create document</span>
 		<?php } ?>
+<div>
+	<div style="float: left">
+		<ul style="list-style-type: none;margin-bottom: 0px;margin-left: 0px;margin-right: 0px;margin-top: 0px;overflow-wrap: break-word;padding-left: 0px;">
+		<?php $i = 0; foreach($sections as $row) { $i++; ?>
+		<li><a href="?id=<?php eh($i);?>"><?php eh($row[1]); ?></a></li>
+		<?php } ?>
+		</ul>
+	</div>
+	<div>
 		<table id="table" class="main-table">
 			<thead>
 			<tr>
-				<?php $i = 0; ?>
-				<?php if($uid) { ?>
-				<th width="1%"><input type="checkbox" onclick="f_select_all(event)"/></th>
-				<?php $i++; } ?>
-				<th width="20%" onclick="sortTable(<?php eh($i++); ?>)">Name</th>
-				<th width="10%" onclick="sortTable(<?php eh($i++); ?>)">Phone</th>
-				<th width="10%" onclick="sortTable(<?php eh($i++); ?>)">Mobile</th>
-				<th width="25%" onclick="sortTable(<?php eh($i++); ?>)">E-Mail</th>
-				<th width="10%" onclick="sortTable(<?php eh($i++); ?>)">Position</th>
-				<th width="10%" onclick="sortTable(<?php eh($i++); ?>)">Department</th>
-				<?php if($uid) { ?>
-				<th width="15%">Operations</th>
-				<?php } ?>
+				<th width="20%">Name</th>
+				<th width="10%">Status</th>
+				<th width="10%">bis_unit</th>
+				<th width="25%">reg_upr</th>
+				<th width="10%">reg_otd</th>
+				<th width="10%">contr_name</th>
+				<th width="10%">order</th>
+				<th width="10%">Date</th>
+				<th width="10%">Type</th>
 			</tr>
 			</thead>
 			<tbody id="table-data">
@@ -63,29 +68,31 @@
 		</form>
 		<a href="#" onclick="f_export_selected(event); return false;">Export selected</a>
 		<?php } ?>
+	</div>
+</div>
 		<br />
 		<br />
 		<div id="edit-container" class="modal-container" style="display: none">
 			<span class="close" onclick="this.parentNode.style.display='none'">&times;</span>
 			<div class="modal-content">
-				<h3>Contact</h3>
+				<h3>Create document</h3>
 				<input id="edit_id" type="hidden" value=""/>
-				<div class="form-title"><label for="firstname">First name:</label></div>
-				<input class="form-field" id="firstname" type="edit" value=""/>
-				<div class="form-title"><label for="lastname">Last name:</label></div>
-				<input class="form-field" id="lastname" type="edit" value=""/>
-				<div class="form-title"><label for="company">Company:</label></div>
-				<input class="form-field" id="company" type="edit" value=""/>
-				<div class="form-title"><label for="department">Department:</label></div>
-				<input class="form-field" id="department" type="edit" value=""/>
-				<div class="form-title"><label for="position">Position:</label></div>
-				<input class="form-field" id="position" type="edit" value=""/>
-				<div class="form-title"><label for="phone">Phone:</label></div>
-				<input class="form-field" id="phone" type="edit" value=""/>
-				<div class="form-title"><label for="mobile">Mobile:</label></div>
-				<input class="form-field" id="mobile" type="edit" value=""/>
-				<div class="form-title"><label for="mail">E-mail:</label></div>
-				<input class="form-field" id="mail" type="edit" value=""/><br />
+				<div class="form-title"><label for="reg_upr">Региональное управление*:</label></div>
+				<input class="form-field" id="reg_upr" type="edit" value=""/>
+				<div class="form-title"><label for="reg_otd">Региональное отделение*:</label></div>
+				<input class="form-field" id="reg_otd" type="edit" value=""/>
+				<div class="form-title"><label for="bis_unit">Бизнес юнит*:</label></div>
+				<input class="form-field" id="bis_unit" type="edit" value=""/>
+				<div class="form-title"><label for="doc_type">Тип документа*:</label></div>
+				<input class="form-field" id="doc_type" type="edit" value=""/>
+				<div class="form-title"><label for="order">Номер ордера*:</label></div>
+				<input class="form-field" id="order" type="edit" value=""/>
+				<div class="form-title"><label for="order_date">Дата ордера*:</label></div>
+				<input class="form-field" id="order_date" type="edit" value=""/>
+				<div class="form-title"><label for="contr_name">Наименование контрагента*:</label></div>
+				<input class="form-field" id="contr_name" type="edit" value=""/>
+				<div class="form-title"><label for="info">Описание:</label></div>
+				<input class="form-field" id="info" type="edit" value=""/><br />
 				<button class="form-button" type="button" onclick="f_save();">Save</button>
 			</div>
 		</div>

@@ -40,11 +40,11 @@ class UserPermissions
 
 	private function get_user_rights($object_id)
 	{
-		$this->rights[$object_id] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+		$this->rights[$object_id] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 		
 		$link = $this->ldap->get_link();
 
-		if($link && $this->db->select(rpv("SELECT dn, bits FROM @access WHERE oid = #", $object_id)))
+		if($link && $this->db->select(rpv("SELECT dn, allow_bits FROM @access WHERE oid = #", $object_id)))
 		{
 			foreach($this->db->data as $row)
 			{

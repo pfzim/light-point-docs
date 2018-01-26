@@ -493,18 +493,43 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			include('templ/tpl.main.php');
 		}
 		exit;
+		case 'create_doc':
+		{
+			header("Content-Type: text/plain; charset=utf-8");
+			if(!$user_perm->check_permission($id, LPD_ACCESS_CREATE))
+			{
+				echo '{"code": 1, "message": "Access denied to section ID for USER_ID"}';
+				exit;
+			}
+
+			$s_first_name = @$_POST['firstname'];
+			$s_last_name = @$_POST['lastname'];
+			$s_department = @$_POST['department'];
+			$s_organization = @$_POST['company'];
+			$s_position = @$_POST['position'];
+			$s_phone_internal = @$_POST['phone'];
+			$s_phone_mobile = @$_POST['mobile'];
+			$s_mail = @$_POST['mail'];
+			$s_photo = 0;
+
+			$db->put(rpv("INSERT INTO `@docs` (`pid`, `uid`, `create_date`, `modify_date`, `name`, `status`, `bis_unit`, `reg_upr`, `reg_otd`, `contr_name`, `order`, `order_date`, `doc_type`, `deleted`) VALUES (#, #, NOW(), NOW(), !, #, #, #, #, !, !, !, #, 0)", $s_first_name, $s_last_name, $s_department, $s_organization, $s_position, $s_phone_internal, $s_phone_mobile, $s_mail, $s_photo));
+			$id = $db->last_id();
+			echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
+		}
+		exit;
 	}
 
-	if(!$user_perm->check_permission(0, LPD_ACCESS_READ))
+	if(!$user_perm->check_permission($id, LPD_ACCESS_READ))
 	{
-		$error_msg = "Access denied!";
+		$error_msg = "Access denied to section ID for USER_ID!";
 		include('templ/tpl.message.php');
 		exit;
 	}
 
 	header("Content-Type: text/html; charset=utf-8");
 
-	$db->select(rpv("SELECT m.`id`, m.`samname`, m.`fname`, m.`lname`, m.`dep`, m.`org`, m.`pos`, m.`pint`, m.`pcell`, m.`mail`, m.`photo`, m.`map`, m.`x`, m.`y`, m.`visible` FROM `@contacts` AS m WHERE m.`visible` = 1 ORDER BY m.`lname`, m.`fname`"));
+	$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
+	$db->select_ex($docs, rpv("SELECT m.`id`, m.`pid`, m.`uid`, m.`create_date`, m.`modify_date`, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, m.`order_date`, m.`doc_type` FROM `@docs` AS m WHERE m.`pid` = # m.`deleted` = 0 ORDER BY m.`modify_date`", $id));
 
 	include('templ/tpl.main.php');
 	//include('templ/tpl.debug.php');

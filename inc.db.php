@@ -97,7 +97,7 @@ class MySQLDB
 				}
 
 				$this->db_ro_selected = TRUE;
-				
+
 				if(!mysqli_set_charset($this->link_ro, $this->db_cpage))
 				{
 					$this->error(mysqli_error($this->link_ro));
@@ -154,7 +154,12 @@ class MySQLDB
 
 	public function select($query)
 	{
-		$this->data = array();
+		return $this->select_ex($this->data, $query);
+	}
+
+	public function select_ex(&$data, $query)
+	{
+		$data = array();
 
 		if(!$this->connect(TRUE))
 		{
@@ -175,7 +180,7 @@ class MySQLDB
 
 		while($row = mysqli_fetch_row($res))
 		{
-			$this->data[] = $row;
+			$data[] = $row;
 		}
 
 		mysqli_free_result($res);
@@ -185,7 +190,12 @@ class MySQLDB
 
 	public function select_assoc($query)
 	{
-		$this->data = array();
+		return $this->select_assoc_ex($this->data, $query);
+	}
+
+	public function select_assoc_ex(&$data, $query)
+	{
+		$data = array();
 
 		if(!$this->connect(TRUE))
 		{
@@ -206,7 +216,7 @@ class MySQLDB
 
 		while($row = mysqli_fetch_assoc($res))
 		{
-			$this->data[] = $row;
+			$data[] = $row;
 		}
 
 		mysqli_free_result($res);
