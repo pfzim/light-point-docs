@@ -25,6 +25,26 @@ if(!file_exists('inc.config.php'))
 
 require_once("inc.config.php");
 
+$g_doc_status = array("Undefined", "Создан", "Отфактурован", "На доработку", "Доработан", "Замена документов");
+$g_doc_reg_upr = array("Undefined", "Region 1", "Region 2");
+$g_doc_reg_otd = array("Undefined", "Department 1", "Department 2");
+$g_doc_types = array("Торг12", "СФ", "1Т", "Доверенность", "Справка А", "Справка Б",);
+
+function doc_type_to_string($doc_type)
+{
+	global $g_doc_types;
+
+	$result = "";
+	for($i = 0; $i < 6; $i++)
+	{
+		if(($doc_type >> $i) & 0x01)
+		{
+			$result .= $g_doc_types[$i].';';
+		}
+	}
+	return $result;
+}
+
 function php_mailer($to, $name, $subject, $html, $plain)
 {
 	require_once 'libs/PHPMailer/PHPMailerAutoload.php';
@@ -130,7 +150,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		}
 	}
 
-	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, FALSE);
+	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
 	$ldap = new LDAP(LDAP_HOST, LDAP_PORT, LDAP_USER, LDAP_PASSWD, FALSE);
 	$user_perm = new UserPermissions($db, $ldap, $user_login);
 
@@ -163,7 +183,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 					include('templ/tpl.login.php');
 					exit;
 				}
-				
+
 				if(!$ldap->reset_user($login.'@'.$domain, @$_POST['passwd'], TRUE))
 				{
 					$error_msg = "Неверное имя пользователя или пароль!";
@@ -217,6 +237,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 			break;
 		}
+
 		case 'export':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
@@ -229,6 +250,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			include('templ/tpl.export.php');
 		}
 		exit;
+
 		case 'export_selected':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
@@ -264,6 +286,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			include('templ/tpl.export.php');
 		}
 		exit;
+
 		case 'hide':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
@@ -278,6 +301,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			echo '{"code": 0, "message": "Successful hide (ID '.$id.')"}';
 		}
 		exit;
+
 		case 'show':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
@@ -292,6 +316,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			echo '{"code": 0, "message": "Successful show (ID '.$id.')"}';
 		}
 		exit;
+
 		case 'setlocation':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
@@ -311,56 +336,23 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			echo '{"code": 0, "id": '.$id.', "map": '.json_escape(@$_POST['map']).', "x": '.json_escape(@$_POST['x']).', "y": '.json_escape(@$_POST['y']).', "message": "Location set (ID '.$id.')"}';
 		}
 		exit;
-		case 'setphoto':
+
+		case 'upload':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
-			if(!$uid)
+
+			if(!@move_uploaded_file(@$_FILES['file']['tmp_name'], dirname(__FILE__).DIRECTORY_SEPARATOR.'files'.DIRECTORY_SEPARATOR.'f'.$id))
 			{
-				echo '{"code": 1, "message": "Please, log in"}';
-				exit;
-			}
-			if(!$id)
-			{
-				echo '{"code": 1, "message": "Invalid identifier"}';
-				exit;
-			}
-			if(!file_exists(@$_FILES['photo']['tmp_name']))
-			{
-				echo '{"code": 1, "message": "Invalid photo"}';
+				echo '{"code": 1, "message": "Failed upload"}';
 				exit;
 			}
 
-			$s_photo = file_get_contents(@$_FILES['photo']['tmp_name']);
-			$w = 64;
-			$h = 64;
-			list($width, $height) = getimagesizefromstring($s_photo);
-			$r = $w / $h;
-			if($width/$height > $r)
-			{
-				$src_width = ceil($height*$r);
-				$src_x = ceil(($width - $src_width)/2);
-				$src_y = 0;
-				$src_height = $height;
-			}
-			else
-			{
-				$src_height = ceil($width/$r);
-				$src_y = ceil(($height - $src_height)/2);
-				$src_x = 0;
-				$src_width = $width;
-			}
-			$src = imagecreatefromstring($s_photo);
-			$dst = imagecreatetruecolor($w, $h);
-			imagecopyresampled($dst, $src, 0, 0, $src_x, $src_y, $w, $h, $src_width, $src_height);
-			imagejpeg($dst, dirname(__FILE__).DIRECTORY_SEPARATOR.'photos'.DIRECTORY_SEPARATOR.'t'.$id.'.jpg', 100);
-			imagedestroy($dst);
-			imagedestroy($src);
+			$db->put(rpv("INSERT INTO `@files` (`pid`, `name`, )", $id));
 
-			$db->put(rpv("UPDATE `@contacts` SET `photo` = 1 WHERE `id` = # LIMIT 1", $id));
-
-			echo '{"code": 0, "id": '.$id.', "message": "Photo set (ID '.$id.')"}';
+			echo '{"code": 0, "id": '.$id.', "message": "File added (ID '.$id.')"}';
 		}
 		exit;
+
 		case 'deletephoto':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
@@ -380,38 +372,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			echo '{"code": 0, "id": '.$id.', "message": "Photo deleted (ID '.$id.')"}';
 		}
 		exit;
-		case 'save':
-		{
-			header("Content-Type: text/plain; charset=utf-8");
-			if(!$uid)
-			{
-				echo '{"code": 1, "message": "Please, log in"}';
-				exit;
-			}
 
-			$s_first_name = @$_POST['firstname'];
-			$s_last_name = @$_POST['lastname'];
-			$s_department = @$_POST['department'];
-			$s_organization = @$_POST['company'];
-			$s_position = @$_POST['position'];
-			$s_phone_internal = @$_POST['phone'];
-			$s_phone_mobile = @$_POST['mobile'];
-			$s_mail = @$_POST['mail'];
-			$s_photo = 0;
-
-			if(!$id)
-			{
-				$db->put(rpv("INSERT INTO `@contacts` (`samname`, `fname`, `lname`, `dep`, `org`, `pos`, `pint`, `pcell`, `mail`, `photo`, `visible`) VALUES ('', !, !, !, !, !, !, !, !, #, 1)", $s_first_name, $s_last_name, $s_department, $s_organization, $s_position, $s_phone_internal, $s_phone_mobile, $s_mail, $s_photo));
-				$id = $db->last_id();
-				echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
-			}
-			else
-			{
-				$db->put(rpv("UPDATE `@contacts` SET `fname` = !, `lname` = !, `dep` = !, `org` = !, `pos` = !, `pint` = !, `pcell` = !, `mail` = !, `photo` = # WHERE `id` = # AND `samname` = '' LIMIT 1", $s_first_name, $s_last_name, $s_department, $s_organization, $s_position, $s_phone_internal, $s_phone_mobile, $s_mail, $s_photo, $id));
-				echo '{"code": 0, "id": '.$id.',"message": "Updated (ID '.$id.')"}';
-			}
-		}
-		exit;
 		case 'delete':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
@@ -437,6 +398,37 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			echo '{"code": 0, "message": "Deleted (ID '.$id.')"}';
 		}
 		exit;
+
+		case 'download':
+		{
+			if($db->select_ex($file, rpv("SELECT m.`name`, j1.`pid` FROM `@files` AS m LEFT JOIN `@docs` AS j1 ON j1.`id` = m.`pid` WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $id)))
+			{
+				$db->disconnect(); // release database connection
+
+				if(!$user_perm->check_permission($file[0][1], LPD_ACCESS_READ))
+				{
+					$error_msg = "Access denied to section ".$file[0][1]." for user ".$uid."!";
+					include('templ/tpl.message.php');
+					exit;
+				}
+				
+				$filename = dirname(__FILE__).DIRECTORY_SEPARATOR.'files'.DIRECTORY_SEPARATOR.'f'.$id.'';
+				if(file_exists($filename))
+				{
+					header("Content-Type: application/octet-stream");
+					header("Content-Length: ".filesize($filename));
+					header("Content-Disposition: attachment; filename=\"".rawurlencode($file[0][0])."\"; filename*=utf-8''".rawurlencode($file[0][0]));
+					readfile($filename);
+					exit;
+				}
+			}
+
+			$error_msg = "File not found!";
+			include('templ/tpl.message.php');
+			exit;
+		}
+		exit;
+
 		case 'get':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
@@ -455,81 +447,190 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			echo '{"code": 0, "id": '.intval($db->data[0][0]).', "samname": "'.json_escape($db->data[0][1]).'", "firstname": "'.json_escape($db->data[0][2]).'", "lastname": "'.json_escape($db->data[0][3]).'", "department": "'.json_escape($db->data[0][4]).'", "company": "'.json_escape($db->data[0][5]).'", "position": "'.json_escape($db->data[0][6]).'", "phone": "'.json_escape($db->data[0][7]).'", "mobile": "'.json_escape($db->data[0][8]).'", "mail": "'.json_escape($db->data[0][9]).'", "photo": '.intval($db->data[0][10]).', "map": '.intval($db->data[0][11]).', "x": '.intval($db->data[0][12]).', "y": '.intval($db->data[0][13]).', "visible": '.intval($db->data[0][14]).'}';
 		}
 		exit;
-		case 'get_acs_location':
+
+		case 'save':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
-			if(!$id)
+			
+			$result_json = array(
+				'code' => 0,
+				'message' => '',
+				'errors' => array()
+			);
+			
+			$v_id = intval(@$_POST['id']);
+			$v_pid = intval(@$_POST['pid']);
+			$v_name = @$_POST['name'];
+			$v_status = intval(@$_POST['status']);
+			$v_bis_unit = @$_POST['bis_unit'];
+			$v_reg_upr = intval(@$_POST['reg_upr']);
+			$v_reg_otd = intval(@$_POST['reg_otd']);
+			$v_contr_name = @$_POST['contr_name'];
+			$v_order = @$_POST['order'];
+			$v_order_date = @$_POST['order_date'];
+			$v_info = @$_POST['info'];
+
+			$v_doc_type = 0;
+			$v_doc_type |= intval(@$_POST['doc_type_1'])?0x01:0;
+			$v_doc_type |= intval(@$_POST['doc_type_2'])?0x02:0;
+			$v_doc_type |= intval(@$_POST['doc_type_3'])?0x04:0;
+			$v_doc_type |= intval(@$_POST['doc_type_4'])?0x08:0;
+			$v_doc_type |= intval(@$_POST['doc_type_5'])?0x10:0;
+			$v_doc_type |= intval(@$_POST['doc_type_6'])?0x20:0;
+
+			//if(($v_id && !$user_perm->check_permission($v_pid, LPD_ACCESS_CREATE)) || (!$v_id && !$user_perm->check_permission($v_pid, LPD_ACCESS_EDIT)))
+			if(!$user_perm->check_permission($v_pid, LPD_ACCESS_WRITE))
 			{
-				echo '{"code": 1, "message": "Invalid identifier"}';
-				exit;
+				//echo '{"code": 1, "message": "Access denied for create/edit document '.$v_id.' in section '.$v_pid.' for user '.$uid.'!"}';
+				//exit;
+			}
+			
+			if(($v_status < 1) || ($v_status >= count($g_doc_status)))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'status', 'msg' => 'Не выбрано значение!');
 			}
 
-			if(!$db->select(rpv("SELECT m.`id`, m.`samname`, m.`fname`, m.`lname` FROM `@contacts` AS m WHERE m.`id` = # LIMIT 1", $id)))
+			if(empty($v_bis_unit))
 			{
-				echo '{"code": 1, "message": "DB error"}';
-				exit;
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'bis_unit', 'msg' => 'Укажите бизнес-юнит!');
 			}
 
-			require_once('inc.acs.php');
+			if(empty($v_reg_upr))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'reg_upr', 'msg' => 'Выберите региональное управление!');
+			}
 
-			echo '{"code": 0, "id": '.intval($db->data[0][0]).', "location": '.intval(get_acs_location($db->data[0][0], $db->data[0][1], $db->data[0][2], $db->data[0][3])).'}';
+			if(empty($v_reg_otd))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'reg_otd', 'msg' => 'Выберите региональное отделение!');
+			}
+
+			if(empty($v_contr_name))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'contr_name', 'msg' => 'Укажите наименование контрагента!');
+			}
+
+			if(empty($v_order))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'order', 'msg' => 'Укажите номер ордера!');
+			}
+
+			$d = explode('.', $v_order_date, 3);
+			$nd = intval(@$d[0]);
+			$nm = intval(@$d[1]);
+			$ny = intval(@$d[2]);
+			$v_order_date = sprintf("%04d-%02d-%02d", $ny, $nm, $nd);
+
+			if(!datecheck($nd, $nm, $ny))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'order_date', 'msg' => 'Укажите правильную дату ордера!');
+			}
+
+			if(!($v_doc_type & 0x3F))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'doc_type_1', 'msg' => 'Выберите хотя бы один тип документа!');
+			}
+
+			if($result_json['code'])
+			{
+				$result_json['message'] = 'Заполнены не все значения!';
+				echo json_encode($result_json);
+				exit;
+			}
+			
+			if(!$v_id)
+			{
+				$v_name = $v_order_date.$v_name;
+				
+				$db->put(rpv("INSERT INTO `@docs` (`pid`, `uid`, `create_date`, `modify_date`, `name`, `status`, `bis_unit`, `reg_upr`, `reg_otd`, `contr_name`, `order`, `order_date`, `doc_type`, `info`, `deleted`) VALUES (#, #, NOW(), NOW(), !, #, #, #, #, !, !, !, #, !, 0)",
+					$v_pid,
+					$uid,
+					$v_name,
+					$v_status,
+					$v_bis_unit,
+					$v_reg_upr,
+					$v_reg_otd,
+					$v_contr_name,
+					$v_order,
+					$v_order_date,
+					$v_doc_type,
+					$v_info
+				));
+				$id = $db->last_id();
+				echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
+			}
+			else
+			{
+				$db->put(rpv("UPDATE `@docs` SET `uid` = #, `modify_date` = NOW(), `name` = !, `status` = #, `bis_unit` = !, `reg_upr` = #, `reg_otd` = #, `contr_name` = !, `order` = !, `order_date` = !, `doc_type` = #, `info` = ! WHERE `id` = # AND `pid` = # LIMIT 1",
+					$uid,
+					$v_name,
+					$v_status,
+					$v_bis_unit,
+					$v_reg_upr,
+					$v_reg_otd,
+					$v_contr_name,
+					$v_order,
+					$v_order_date,
+					$v_doc_type,
+					$v_info,
+					$v_id,
+					$v_pid
+				));
+				echo '{"code": 0, "id": '.$id.',"message": "Updated (ID '.$id.')"}';
+			}
 		}
 		exit;
-		case 'map':
+
+		case 'doc':
 		{
 			header("Content-Type: text/html; charset=utf-8");
 
-			$db->select(rpv("SELECT m.`id`, m.`samname`, m.`fname`, m.`lname`, m.`dep`, m.`org`, m.`pos`, m.`pint`, m.`pcell`, m.`mail`, m.`photo`, m.`map`, m.`x`, m.`y`, m.`visible` FROM `@contacts` AS m WHERE m.`visible` = 1 AND m.`map` = # ORDER BY m.`lname`, m.`fname`", $id));
+			$db->select_assoc_ex($doc, rpv("SELECT m.`id`, m.`pid`, m.`uid`, m.`create_date`, m.`modify_date`, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, m.`order_date`, m.`doc_type` FROM `@docs` AS m WHERE m.`id` = #", $id));
 
-			include('templ/tpl.map.php');
+			if(!$user_perm->check_permission($doc[0]['pid'], LPD_ACCESS_READ))
+			{
+				$error_msg = "Access denied to section ".$doc[0]['pid']." for user ".$uid."!";
+				//include('templ/tpl.message.php');
+				//exit;
+			}
+
+			$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
+			$db->select_assoc_ex($docs, rpv("SELECT m.`id`, m.`pid`, m.`uid`, m.`create_date`, m.`modify_date`, m.`name` FROM `@files` AS m WHERE m.`pid` = # AND m.`deleted` = 0 ORDER BY m.`name`", $id));
+
+			include('templ/tpl.doc.php');
 		}
 		exit;
-		case 'all':
+
+		case '':
 		{
+			if(!$user_perm->check_permission($id, LPD_ACCESS_READ))
+			{
+				$error_msg = "Access denied to section ".$id." for user ".$uid."!";
+				//include('templ/tpl.message.php');
+				//exit;
+			}
+
 			header("Content-Type: text/html; charset=utf-8");
 
-			$db->select(rpv("SELECT m.`id`, m.`samname`, m.`fname`, m.`lname`, m.`dep`, m.`org`, m.`pos`, m.`pint`, m.`pcell`, m.`mail`, m.`photo`, m.`map`, m.`x`, m.`y`, m.`visible` FROM `@contacts` AS m ORDER BY m.`lname`, m.`fname`"));
+			$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
+			$db->select_assoc_ex($docs, rpv("SELECT m.`id`, m.`pid`, m.`uid`, m.`create_date`, m.`modify_date`, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, m.`order_date`, m.`doc_type` FROM `@docs` AS m WHERE m.`pid` = # AND m.`deleted` = 0 ORDER BY m.`modify_date`", $id));
 
 			include('templ/tpl.main.php');
 		}
 		exit;
-		case 'create_doc':
+
+		default:
 		{
-			header("Content-Type: text/plain; charset=utf-8");
-			if(!$user_perm->check_permission($id, LPD_ACCESS_CREATE))
-			{
-				echo '{"code": 1, "message": "Access denied to section ID for USER_ID"}';
-				exit;
-			}
-
-			$s_first_name = @$_POST['firstname'];
-			$s_last_name = @$_POST['lastname'];
-			$s_department = @$_POST['department'];
-			$s_organization = @$_POST['company'];
-			$s_position = @$_POST['position'];
-			$s_phone_internal = @$_POST['phone'];
-			$s_phone_mobile = @$_POST['mobile'];
-			$s_mail = @$_POST['mail'];
-			$s_photo = 0;
-
-			$db->put(rpv("INSERT INTO `@docs` (`pid`, `uid`, `create_date`, `modify_date`, `name`, `status`, `bis_unit`, `reg_upr`, `reg_otd`, `contr_name`, `order`, `order_date`, `doc_type`, `deleted`) VALUES (#, #, NOW(), NOW(), !, #, #, #, #, !, !, !, #, 0)", $s_first_name, $s_last_name, $s_department, $s_organization, $s_position, $s_phone_internal, $s_phone_mobile, $s_mail, $s_photo));
-			$id = $db->last_id();
-			echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
+			$error_msg = "Unknown action: ".$action."!";
+			include('templ/tpl.message.php');
+			exit;
 		}
-		exit;
 	}
-
-	if(!$user_perm->check_permission($id, LPD_ACCESS_READ))
-	{
-		$error_msg = "Access denied to section ID for USER_ID!";
-		include('templ/tpl.message.php');
-		exit;
-	}
-
-	header("Content-Type: text/html; charset=utf-8");
-
-	$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
-	$db->select_ex($docs, rpv("SELECT m.`id`, m.`pid`, m.`uid`, m.`create_date`, m.`modify_date`, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, m.`order_date`, m.`doc_type` FROM `@docs` AS m WHERE m.`pid` = # m.`deleted` = 0 ORDER BY m.`modify_date`", $id));
-
-	include('templ/tpl.main.php');
-	//include('templ/tpl.debug.php');

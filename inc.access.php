@@ -44,9 +44,9 @@ class UserPermissions
 		
 		$link = $this->ldap->get_link();
 
-		if($link && $this->db->select(rpv("SELECT dn, allow_bits FROM @access WHERE oid = #", $object_id)))
+		if($link && $this->db->select_ex($result, rpv("SELECT dn, allow_bits FROM @access WHERE oid = #", $object_id)))
 		{
-			foreach($this->db->data as $row)
+			foreach($result as $row)
 			{
 				$cookie = "";
 				ldap_control_paged_result($link, 2, true, $cookie);

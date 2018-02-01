@@ -1,15 +1,14 @@
 <?php include("tpl.header.php"); ?>
+<script type="text/javascript">
+	g_pid = <?php eh($id); ?>;
+</script>
 		<h3 align="center">Light Point Docs</h3>
-		<div id="imgblock" class="user-photo"><img id="userphoto" src=""/></div>
-		<input type="text" id="search" class="form-field" onkeyup="filter_table()" placeholder="Search..">
-		<?php if($uid) { ?>
-		<span class="command f-right" onclick="f_edit(null);">Create document</span>
-		<?php } ?>
+		<span class="command f-right" onclick="f_edit(null, 'form1');">Create document</span>
 <div>
 	<div style="float: left">
 		<ul style="list-style-type: none;margin-bottom: 0px;margin-left: 0px;margin-right: 0px;margin-top: 0px;overflow-wrap: break-word;padding-left: 0px;">
 		<?php $i = 0; foreach($sections as $row) { $i++; ?>
-		<li><a href="?id=<?php eh($i);?>"><?php eh($row[1]); ?></a></li>
+		<li><a href="?id=<?php eh($row[0]); ?>"><?php eh($row[1]); ?></a></li>
 		<?php } ?>
 		</ul>
 	</div>
@@ -29,79 +28,78 @@
 			</tr>
 			</thead>
 			<tbody id="table-data">
-		<?php $i = 0; foreach($db->data as $row) { $i++; ?>
-			<tr id="<?php eh("row".$row[0]);?>" data-id=<?php eh($row[0]);?> data-map=<?php eh($row[11]); ?> data-x=<?php eh($row[12]); ?> data-y=<?php eh($row[13]); ?> data-photo=<?php eh($row[10]); ?>>
-				<?php if($uid) { ?>
-				<td><input type="checkbox" name="check" value="<?php eh($row[0]); ?>"/></td>
-				<?php } ?>
-				<td onclick="f_sw_map(event);" onmouseenter="f_sw_img(event);" onmouseleave="gi('imgblock').style.display = 'none'" onmousemove="f_mv_img(event);" style="cursor: pointer;" class="<?php if(intval($row[10])) { eh('userwithphoto'); } ?>"><?php eh($row[2].' '.$row[3]); ?></td>
-				<td class="command" onclick="f_get_acs_location(event);"><?php eh($row[7]); ?></td>
-				<td><?php eh($row[8]); ?></td>
-				<td><a href="mailto:<?php eh($row[9]); ?>"><?php eh($row[9]); ?></a></td>
-				<td><?php eh($row[6]); ?></td>
-				<td><?php eh($row[4]); ?></td>
-				<?php if($uid) { ?>
-				<td>
-					<?php if(empty($row[1])) { ?>
-						<span class="command" onclick="f_edit(event);">Edit</span>
-						<span class="command" onclick="f_delete(event);">Delete</span>
-						<span class="command" onclick="f_photo(event);">Photo</span>
-					<?php } ?>
-					<span class="command" data-map="1" onclick="f_map_set(event);">Map&nbsp;1</span>
-					<?php for($i = 2; $i <= PB_MAPS_COUNT; $i++) { ?>
-						<span class="command" data-map="<?php eh($i); ?>" onclick="f_map_set(event);"><?php eh($i); ?></span>
-					<?php } ?>
-					<?php if($row[14]) { ?>
-						<span class="command" onclick="f_hide(event);">Hide</span>
-					<?php } else { ?>
-						<span class="command" onclick="f_show(event);">Show</span>
-					<?php } ?>
-				</td>
-				<?php } ?>
+		<?php $i = 0; foreach($docs as $row) { $i++; ?>
+			<tr id="<?php eh("row".$row['id']); ?>" data-id=<?php eh($row['id']);?>>
+				<td><a href="?action=doc&id=<?php eh($row['id']); ?>"><?php eh($row['name']); ?></a></td>
+				<td><?php eh($g_doc_status[intval($row['status'])]); ?></td>
+				<td><?php eh($row['bis_unit']); ?></td>
+				<td><?php eh($g_doc_reg_upr[intval($row['reg_upr'])]); ?></td>
+				<td><?php eh($g_doc_reg_otd[intval($row['reg_otd'])]); ?></td>
+				<td><?php eh($row['contr_name']); ?></td>
+				<td><?php eh($row['order']); ?></td>
+				<td><?php eh($row['order_date']); ?></td>
+				<td><?php eh(doc_type_to_string(intval($row['doc_type']))); ?></td>
 			</tr>
 		<?php } ?>
 			</tbody>
 		</table>
-		<?php if($uid) { ?>
-		<form id="contacts" method="post" action="?action=export_selected">
-			<input id="list" type="hidden" name="list" value="" />
-		</form>
-		<a href="#" onclick="f_export_selected(event); return false;">Export selected</a>
-		<?php } ?>
 	</div>
 </div>
 		<br />
 		<br />
-		<div id="edit-container" class="modal-container" style="display: none">
+		<div id="form1-container" class="modal-container" style="display: none">
 			<span class="close" onclick="this.parentNode.style.display='none'">&times;</span>
 			<div class="modal-content">
+				<form id="form1">
 				<h3>Create document</h3>
-				<input id="edit_id" type="hidden" value=""/>
+				<input name="id" type="hidden" value=""/>
+				<input name="pid" type="hidden" value=""/>
 				<div class="form-title"><label for="reg_upr">Региональное управление*:</label></div>
-				<input class="form-field" id="reg_upr" type="edit" value=""/>
-				<div class="form-title"><label for="reg_otd">Региональное отделение*:</label></div>
-				<input class="form-field" id="reg_otd" type="edit" value=""/>
+				<select class="form-field" id="reg_upr" name="reg_upr">
+				<?php for($i = 1; $i < count($g_doc_reg_upr); $i++) { ?>
+					<option value="<?php eh($i); ?>"><?php eh($g_doc_reg_upr[$i]); ?></option>
+				<?php } ?>
+				</select>
+				<div id="reg_upr-error" class="form-error"></div>
+				<div class="form-title">Региональное отделение*:</div>
+				<select class="form-field" name="reg_otd">
+				<?php for($i = 1; $i < count($g_doc_reg_otd); $i++) { ?>
+					<option value="<?php eh($i); ?>"><?php eh($g_doc_reg_otd[$i]); ?></option>
+				<?php } ?>
+				</select>
+				<div id="reg_otd-error" class="form-error"></div>
 				<div class="form-title"><label for="bis_unit">Бизнес юнит*:</label></div>
-				<input class="form-field" id="bis_unit" type="edit" value=""/>
-				<div class="form-title"><label for="doc_type">Тип документа*:</label></div>
-				<input class="form-field" id="doc_type" type="edit" value=""/>
+				<input class="form-field" id="bis_unit" name="bis_unit" type="edit" value=""/>
+				<div id="bis_unit-error" class="form-error"></div>
+				<div class="form-title">Тип документа*:</div>
+				<span><input id="doc_type_1" name="doc_type_1" type="checkbox" value="1"/><label for="doc_type_1">Торг12</label></span>
+				<span><input id="doc_type_2" name="doc_type_2" type="checkbox" value="1"/><label for="doc_type_2">СФ</label></span>
+				<span><input id="doc_type_3" name="doc_type_3" type="checkbox" value="1"/><label for="doc_type_3">1Т</label></span>
+				<span><input id="doc_type_4" name="doc_type_4" type="checkbox" value="1"/><label for="doc_type_4">Доверенность</label></span>
+				<span><input id="doc_type_5" name="doc_type_5" type="checkbox" value="1"/><label for="doc_type_5">Справка А</label></span>
+				<span><input id="doc_type_6" name="doc_type_6" type="checkbox" value="1"/><label for="doc_type_6">Справка Б</label></span>
+				<div id="doc_type_1-error" class="form-error"></div>
 				<div class="form-title"><label for="order">Номер ордера*:</label></div>
-				<input class="form-field" id="order" type="edit" value=""/>
+				<input class="form-field" id="order" name="order" type="edit" value=""/>
+				<div id="order-error" class="form-error"></div>
 				<div class="form-title"><label for="order_date">Дата ордера*:</label></div>
-				<input class="form-field" id="order_date" type="edit" value=""/>
+				<input class="form-field" id="order_date" name="order_date" type="edit" value=""/>
+				<div id="order_date-error" class="form-error"></div>
 				<div class="form-title"><label for="contr_name">Наименование контрагента*:</label></div>
-				<input class="form-field" id="contr_name" type="edit" value=""/>
+				<input class="form-field" id="contr_name" name="contr_name" type="edit" value=""/>
+				<div id="contr_name-error" class="form-error"></div>
+				<div class="form-title">Статус документа*:</div>
+				<select class="form-field" name="status">
+				<?php for($i = 1; $i < count($g_doc_status); $i++) { ?>
+					<option value="<?php eh($i); ?>"><?php eh($g_doc_status[$i]); ?></option>
+				<?php } ?>
+				</select>
+				<div id="status-error" class="form-error"></div>
 				<div class="form-title"><label for="info">Описание:</label></div>
-				<input class="form-field" id="info" type="edit" value=""/><br />
-				<button class="form-button" type="button" onclick="f_save();">Save</button>
+				<input class="form-field" id="info" name="info" type="edit" value=""/><br />
+				<div id="info-error" class="form-error"></div>
+				<button class="form-button" type="button" onclick="f_save('form1');">Save</button>
+				</form>
 			</div>
 		</div>
-		<div id="map-container" class="modal-container" style="display:none">
-			<span class="close" onclick="this.parentNode.style.display='none'">&times;</span>
-			<img id="map-image" class="map-image" src="templ/map1.png"/>
-			<img id="map-marker" class="map-marker" src="templ/marker.gif"/>
-		</div>
-		<form method="post" id="photo-upload" name="photo-upload">		
-			<input id="upload" type="file" name="photo" style="display: none"/>
-		</form>
 <?php include("tpl.footer.php"); ?>

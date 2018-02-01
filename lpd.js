@@ -1,5 +1,4 @@
-var map = 0;
-var map_count = 0;
+var g_pid = 0;
 
 function gi(name)
 {
@@ -226,36 +225,6 @@ function f_show(ev)
 	);
 };
 
-function f_get_acs_location(ev)
-{
-	var el_src = ev.target || ev.srcElement;
-	var id = el_src.parentNode.getAttribute('data-id');
-	f_http("pb.php?"+json2url({'action': 'get_acs_location', 'id': id }),
-		function(data, el)
-		{
-			if(!data.code)
-			{
-				var temp_str = 'unknown status';
-				switch(data.location)
-				{
-					case 1:
-						temp_str = 'In office';
-						break;
-					case 2:
-						temp_str = 'Out office';
-						break;
-				}
-				f_notify(temp_str, data.location?"success":"error");
-			}
-			else
-			{
-				f_notify(data.message, "error");
-			}
-		},
-		el_src
-	);
-};
-
 function f_delete(ev)
 {
 	var el_src = ev.target || ev.srcElement;
@@ -275,31 +244,69 @@ function f_delete(ev)
 	);
 };
 
-function f_save()
+function f_save(form_id)
 {
-	f_http("pb.php?action=save&id="+gi('edit_id').value,
+	var form_data = {};
+	var el = gi(form_id);
+	for(i = 0; i < el.elements.length; i++)
+	{
+		var err = gi(el.elements[i].name + '-error');
+		if(err)
+		{
+			err.style.display='none';
+		}
+		if(el.elements[i].name)
+		{
+			if(el.elements[i].type == 'checkbox')
+			{
+				if(el.elements[i].checked)
+				{
+					form_data[el.elements[i].name] = el.elements[i].value;
+				}
+			}
+			else if(el.elements[i].type == 'select-one')
+			{
+				if(el.elements[i].selectedIndex != -1)
+				{
+					form_data[el.elements[i].name] = el.elements[i].value;
+				}
+			}
+			else
+			{
+				form_data[el.elements[i].name] = el.elements[i].value;
+			}
+		}
+	}
+	
+	//alert(json2url(form_data));
+	//return;
+
+	f_http("lpd.php?action=save",
 		function(data, params)
 		{
 			f_notify(data.message, data.code?"error":"success");
 			if(!data.code)
 			{
-				gi('edit-container').style.display='none';
-				f_update_row(data.id);
+				gi(params+'-container').style.display='none';
+				//f_update_row(data.id);
+				window.location = window.location;
+			}
+			else if(data.errors)
+			{
+				for(i = 0; i < data.errors.length; i++)
+				{
+					var el = gi(data.errors[i].name + "-error");
+					if(el)
+					{
+						el.textContent = data.errors[i].msg;
+						el.style.display='block';
+					}
+				}
 			}
 		},
-		null,
+		form_id,
 		'application/x-www-form-urlencoded',
-		json2url(
-		{
-			'reg_upr': gi('reg_upr').value,
-			'reg_otd': gi('reg_otd').value,
-			'bis_unit': gi('bis_unit').value,
-			'doc_type': gi('doc_type').value,
-			'order': gi('order').value,
-			'order_date': gi('order_date').value,
-			'contr_name': gi('contr_name').value,
-			'info': gi('info').value
-		})
+		json2url(form_data)
 	);
 }
 
@@ -372,7 +379,7 @@ function f_update_row(id)
 	);
 }
 
-function f_edit(ev)
+function f_edit(ev, form_id)
 {
 	var id = 0;
 	if(ev)
@@ -380,18 +387,38 @@ function f_edit(ev)
 		var el_src = ev.target || ev.srcElement;
 		id = el_src.parentNode.parentNode.getAttribute('data-id');
 	}
-	gi('edit_id').value = id;
 	if(!id)
 	{
-		gi('reg_upr').value = '';
-		gi('reg_otd').value = '';
-		gi('bis_unit').value = '';
-		gi('doc_type').value = '';
-		gi('order').value = '';
-		gi('order_date').value = '';
-		gi('contr_name').value = '';
-		gi('info').value = '';
-		gi('edit-container').style.display='block';
+		var form_data = {};
+		var el = gi(form_id);
+		for(i = 0; i < el.elements.length; i++)
+		{
+			var err = gi(el.elements[i].name + '-error');
+			if(err)
+			{
+				err.style.display='none';
+			}
+			if(el.elements[i].name == 'id')
+			{
+				el.elements[i].value = id;
+			}
+			else if(el.elements[i].name == 'pid')
+			{
+				el.elements[i].value = g_pid;
+			}
+			else
+			{
+				if(el.elements[i].type == 'checkbox')
+				{
+					el.elements[i].checked = false;
+				}
+				else
+				{
+					el.elements[i].value = '';
+				}
+			}
+		}
+		gi(form_id + '-container').style.display='block';
 	}
 	else
 	{
@@ -404,31 +431,40 @@ function f_edit(ev)
 				}
 				else
 				{
-					gi('firstname').value = data.firstname;
-					gi('lastname').value = data.lastname;
-					gi('department').value = data.department;
-					gi('company').value = data.company;
-					gi('position').value = data.position;
-					gi('phone').value = data.phone;
-					gi('mobile').value = data.mobile;
-					gi('mail').value = data.mail;
-					gi('edit-container').style.display='block';
+					var el = gi(params);
+					for(i = 0; i < el.elements.length; i++)
+					{
+						if(el.elements[i].name)
+						{
+							if(el.elements[i].type == 'checkbox')
+							{
+								el.elements[i].checked = (parseInt(data[el.elements[i].name], 10) != 0);
+							}
+							else
+							{
+								el.elements[i].value = data[el.elements[i].name];
+							}
+						}
+					}
+					gi(params+'-container').style.display='block';
 				}
-			}
+			},
+			form_id
 		);
 	}
 }
 
 function f_upload(id)
 {
-	var fd = new FormData(gi("photo-upload"));
-	f_http("pb.php?action=setphoto&id="+id,
+	var fd = new FormData(gi("file-upload"));
+	f_http("lpd.php?action=upload&id="+id,
 		function(data, params)
 		{
 			f_notify(data.message, data.code?"error":"success");
 			if(!data.code)
 			{
-				f_update_row(data.id);
+				//f_update_row(data.id);
+				window.location = window.location;
 			}
 		},
 		null,
@@ -597,4 +633,46 @@ function f_notify(text, type)
 		})(temp),
 		5000
 	);
+}
+
+function lpd_init(_pid)
+{
+	g_pid = _uid;
+	gi("upload").onchange = function(event)
+	{
+		var files = event.target.files;
+		for(var i=0, n=files.length;i<n;i++)
+		{
+			f_upload(uidd, idd, files[i], k++, 0, 0);
+		}
+		return false;
+	};
+
+	window.onbeforeunload = function(e)
+	{
+		for(var i=0, n=xhttp.length;i<n;i++)
+		{
+			if(xhttp[i])
+			{
+				var message = "Your have active uploads. Are you sure want to leave the page and terminate all uploads?";
+				f_popup('Confirm exit', message);
+
+				if (typeof e == "undefined")
+				{
+					e = window.event;
+				}
+				if (e)
+				{
+					e.returnValue = message;
+				}
+				return message;
+			}
+		}
+	};
+
+	var filedrag = document.getElementsByTagName('body')[0];
+
+	filedrag.addEventListener("dragover", DragOver, false);
+	filedrag.addEventListener("dragleave", DragLeave, false);
+	filedrag.addEventListener("drop", function(event) { FileDrop(event, uid, id); }, false);
 }
