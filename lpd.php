@@ -45,6 +45,18 @@ function doc_type_to_string($doc_type)
 	return $result;
 }
 
+function assert_permission_ajax($section_id, $allow_bit)
+{
+	global $uid;
+	global $user_perm;
+
+	if(!$user_perm->check_permission($section_id, $allow_bit))
+	{
+		//echo '{"code": 1, "message": "Access denied to section '.$section_id.' for user '.$uid.'!"}';
+		//exit;
+	}
+}
+
 function php_mailer($to, $name, $subject, $html, $plain)
 {
 	require_once 'libs/PHPMailer/PHPMailerAutoload.php';
@@ -126,9 +138,12 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		exit;
 	}
 
+	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
+	$ldap = new LDAP(LDAP_HOST, LDAP_PORT, LDAP_USER, LDAP_PASSWD, FALSE);
+
 	$uid = 0;
 	$user_login = NULL;
-	if(isset($_SESSION['uid']))
+	if(isset($_SESSION['uid']) && isset($_SESSION['login']))
 	{
 		$uid = $_SESSION['uid'];
 		$user_login = $_SESSION['login'];
@@ -138,7 +153,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 	{
 		if(!empty($_COOKIE['zh']) && !empty($_COOKIE['zl']))
 		{
-			if($db->select(rpv("SELECT m.`id`, m.`login` FROM @users AS m WHERE m.`login` = ! AND m.`sid` IS NOT NULL AND m.`sid` = ! AND m.`deleted` = 0 LIMIT 1", $_COOKIE['zl'], $_COOKIE['zh'])))
+			if($db->select(rpv("SELECT m.`id`, m.`login` FROM @users AS m WHERE m.`login` = ! AND m.`sid` IS NOT NULL AND m.`sid` = ! LIMIT 1", $_COOKIE['zl'], $_COOKIE['zh'])))
 			{
 				$_SESSION['uid'] = $db->data[0][0];
 				$_SESSION['login'] = $db->data[0][1];
@@ -150,8 +165,6 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		}
 	}
 
-	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
-	$ldap = new LDAP(LDAP_HOST, LDAP_PORT, LDAP_USER, LDAP_PASSWD, FALSE);
 	$user_perm = new UserPermissions($db, $ldap, $user_login);
 
 	if(empty($uid))
@@ -222,6 +235,13 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		}
 	}
 
+	if(!$uid)
+	{
+		//include('templ/tpl.login.php'); // show login form
+		header('Location: '.$self.'?action=login');
+		exit;
+	}
+	
 	switch($action)
 	{
 		case 'logoff':
@@ -234,20 +254,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			$user_perm->reset_user();
 			setcookie("zh", NULL, time()-60, '/');
 			setcookie("zl", NULL, time()-60, '/');
-
-			break;
-		}
-
-		case 'export':
-		{
-			header("Content-Type: text/plain; charset=utf-8");
-			header("Content-Disposition: attachment; filename=\"base.xml\"; filename*=utf-8''base.xml");
-
-			$db->select(rpv("SELECT m.`id`, m.`samname`, m.`fname`, m.`lname`, m.`dep`, m.`org`, m.`pos`, m.`pint`, m.`pcell`, m.`mail` FROM `@contacts` AS m WHERE m.`visible` = 1 ORDER BY m.`lname`, m.`fname`"));
-
-			$result = $db->data;
-
-			include('templ/tpl.export.php');
+			
+			header('Location: '.$self);
 		}
 		exit;
 
@@ -287,115 +295,149 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		}
 		exit;
 
-		case 'hide':
-		{
-			header("Content-Type: text/plain; charset=utf-8");
-			if(!$uid)
-			{
-				echo '{"code": 1, "message": "Please, log in"}';
-				exit;
-			}
-
-			$db->put(rpv("UPDATE `@contacts` SET `visible` = 0 WHERE `id` = # LIMIT 1", $id));
-
-			echo '{"code": 0, "message": "Successful hide (ID '.$id.')"}';
-		}
-		exit;
-
-		case 'show':
-		{
-			header("Content-Type: text/plain; charset=utf-8");
-			if(!$uid)
-			{
-				echo '{"code": 1, "message": "Please, log in"}';
-				exit;
-			}
-
-			$db->put(rpv("UPDATE `@contacts` SET `visible` = 1 WHERE `id` = # LIMIT 1", $id));
-
-			echo '{"code": 0, "message": "Successful show (ID '.$id.')"}';
-		}
-		exit;
-
-		case 'setlocation':
-		{
-			header("Content-Type: text/plain; charset=utf-8");
-			if(!$uid)
-			{
-				echo '{"code": 1, "message": "Please, log in"}';
-				exit;
-			}
-			if(@$_POST['map'] > PB_MAPS_COUNT)
-			{
-				echo '{"code": 1, "message": "Invalid map identifier"}';
-				exit;
-			}
-
-			$db->put(rpv("UPDATE `@contacts` SET `map` = #, `x` = #, `y` = # WHERE `id` = # LIMIT 1", @$_POST['map'], @$_POST['x'], @$_POST['y'], $id));
-
-			echo '{"code": 0, "id": '.$id.', "map": '.json_escape(@$_POST['map']).', "x": '.json_escape(@$_POST['x']).', "y": '.json_escape(@$_POST['y']).', "message": "Location set (ID '.$id.')"}';
-		}
-		exit;
-
 		case 'upload':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
 
-			if(!@move_uploaded_file(@$_FILES['file']['tmp_name'], dirname(__FILE__).DIRECTORY_SEPARATOR.'files'.DIRECTORY_SEPARATOR.'f'.$id))
+			$v_id = intval(@$_POST['id']);		// id of file for replace
+			$v_pid = intval(@$_POST['pid']);	// id parent document
+
+			if(!$db->select_ex($doc, rpv("SELECT m.`pid` FROM `@docs` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $v_pid))
+				|| empty($_FILES['file']['tmp_name'][0])
+				|| !file_exists(@$_FILES['file']['tmp_name'][0])
+			)
 			{
 				echo '{"code": 1, "message": "Failed upload"}';
 				exit;
 			}
 
-			$db->put(rpv("INSERT INTO `@files` (`pid`, `name`, )", $id));
+			assert_permission_ajax($doc[0][0], LPD_ACCESS_WRITE);
 
-			echo '{"code": 0, "id": '.$id.', "message": "File added (ID '.$id.')"}';
+			$files_dir = dirname(__FILE__).DIRECTORY_SEPARATOR.'files'.DIRECTORY_SEPARATOR;
+
+			if($v_id)
+			{
+				if(count($_FILES['file']['tmp_name']) > 1)
+				{
+					echo '{"code": 1, "message": "Too many files uploaded, upload one file"}';
+					exit;
+				}
+
+				if(!$db->select_ex($file, rpv("SELECT m.`modify_date`, m.`uid` FROM `@files` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $v_id)))
+				{
+					echo '{"code": 1, "message": "Failed upload"}';
+					exit;
+				}
+
+				if(!$db->put(rpv("INSERT INTO `@files_history` (`pid`, `modify_date`, `uid`, `deleted`) VALUES (#, NOW(), #, 0)", $v_id, $uid)))
+				{
+					echo '{"code": 1, "message": "Failed upload"}';
+					exit;
+				}
+				$last_id = $db->last_id();
+
+				rename($files_dir.'f'.$v_id, $files_dir.'f'.$v_id.'_'.$last_id);
+
+				if(!$db->put(rpv("UPDATE `@files` SET `modify_date` = NOW(), `uid` = # WHERE `id` = # LIMIT 1", $uid, $v_id)))
+				{
+					echo '{"code": 1, "message": "Failed upload"}';
+					exit;
+				}
+
+				if(!@move_uploaded_file(@$_FILES['file']['tmp_name'][0], $files_dir.'f'.$v_id))
+				{
+					echo '{"code": 1, "message": "Failed upload"}';
+					exit;
+				}
+			}
+			else
+			{
+				for($i = 0; $i < count($_FILES['file']['tmp_name']); $i++)
+				{
+					if(!$db->put(rpv("INSERT INTO `@files` (`pid`, `name`, `create_date`, `modify_date`, `uid`, `deleted`) VALUES (#, !, NOW(), NOW(), #, 0)", $v_pid, @$_FILES['file']['name'][$i], $uid)))
+					{
+						echo '{"code": 1, "message": "Failed upload"}';
+						exit;
+					}
+
+					$v_id = $db->last_id();
+
+					if(!@move_uploaded_file($_FILES['file']['tmp_name'][$i], $files_dir.'f'.$v_id))
+					{
+						echo '{"code": 1, "message": "Failed upload"}';
+						exit;
+					}
+				}
+			}
+
+			echo '{"code": 0, "message": "Files added"}';
 		}
 		exit;
 
-		case 'deletephoto':
+		case 'delete_file':
 		{
-			header("Content-Type: text/plain; charset=utf-8");
-			if(!$uid)
+			if(!$db->select_ex($file, rpv("SELECT j1.`pid` FROM `@files` AS m LEFT JOIN `@docs` AS j1 ON j1.`id` = m.`pid` WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $id)))
 			{
-				echo '{"code": 1, "message": "Please, log in"}';
-				exit;
-			}
-			if(!$id)
-			{
-				echo '{"code": 1, "message": "Invalid identifier"}';
+				echo '{"code": 1, "message": "Failed delete"}';
 				exit;
 			}
 
-			$db->put(rpv("UPDATE `@contacts` SET `photo` = 0 WHERE `id` = # LIMIT 1", $id));
+			assert_permission_ajax($file[0][0], LPD_ACCESS_WRITE);
 
-			echo '{"code": 0, "id": '.$id.', "message": "Photo deleted (ID '.$id.')"}';
+			if(!$db->put(rpv("UPDATE `@files` SET `deleted` = 1 WHERE `id` = # LIMIT 1", $id)))
+			{
+				echo '{"code": 1, "message": "Failed delete"}';
+				exit;
+			}
+
+			if(!$db->put(rpv("UPDATE `@files_history` SET `deleted` = 1 WHERE `pid` = #", $id)))
+			{
+				echo '{"code": 1, "message": "Failed delete"}';
+				exit;
+			}
+
+			echo '{"code": 0, "id": '.$id.', "message": "File deleted"}';
 		}
 		exit;
 
-		case 'delete':
+		case 'delete_doc':
 		{
-			header("Content-Type: text/plain; charset=utf-8");
-			if(!$uid)
+			if(!$db->select_ex($doc, rpv("SELECT m.`pid` FROM `@docs` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $id)))
 			{
-				echo '{"code": 1, "message": "Please, log in"}';
-				exit;
-			}
-			if(!$id)
-			{
-				echo '{"code": 1, "message": "Invalid identifier"}';
+				echo '{"code": 1, "message": "Failed delete document"}';
 				exit;
 			}
 
-			$db->put(rpv("DELETE FROM `@contacts` WHERE `id` = # AND `samname` = '' LIMIT 1", $id));
+			assert_permission_ajax($doc[0][0], LPD_ACCESS_WRITE);
 
-			$filename = dirname(__FILE__).DIRECTORY_SEPARATOR.'photos'.DIRECTORY_SEPARATOR.'t'.$id.'.jpg';
-			if(file_exists($filename))
+			if(!$db->put(rpv("UPDATE `@docs` SET `deleted` = 1 WHERE `id` = # LIMIT 1", $id)))
 			{
-				unlink($filename);
+				echo '{"code": 1, "message": "Failed delete"}';
+				exit;
 			}
 
-			echo '{"code": 0, "message": "Deleted (ID '.$id.')"}';
+			if(!$db->select_ex($files, rpv("SELECT m.`id` FROM `@files` AS m WHERE m.`pid` = # AND m.`deleted` = 0", $id)))
+			{
+				echo '{"code": 1, "message": "Failed delete document"}';
+				exit;
+			}
+
+			foreach($files as $file)
+			{
+				if(!$db->put(rpv("UPDATE `@files` SET `deleted` = 1 WHERE `id` = # LIMIT 1", $file[0])))
+				{
+					echo '{"code": 1, "message": "Failed delete"}';
+					exit;
+				}
+
+				if(!$db->put(rpv("UPDATE `@files_history` SET `deleted` = 1 WHERE `pid` = #", $file[0])))
+				{
+					echo '{"code": 1, "message": "Failed delete"}';
+					exit;
+				}
+			}
+
+			echo '{"code": 0, "id": '.$id.', "message": "Document deleted"}';
 		}
 		exit;
 
@@ -408,11 +450,11 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				if(!$user_perm->check_permission($file[0][1], LPD_ACCESS_READ))
 				{
 					$error_msg = "Access denied to section ".$file[0][1]." for user ".$uid."!";
-					include('templ/tpl.message.php');
-					exit;
+					//include('templ/tpl.message.php');
+					//exit;
 				}
-				
-				$filename = dirname(__FILE__).DIRECTORY_SEPARATOR.'files'.DIRECTORY_SEPARATOR.'f'.$id.'';
+
+				$filename = dirname(__FILE__).DIRECTORY_SEPARATOR.'files'.DIRECTORY_SEPARATOR.'f'.$id;
 				if(file_exists($filename))
 				{
 					header("Content-Type: application/octet-stream");
@@ -432,32 +474,41 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		case 'get':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
-			if(!$id)
+
+			if(!$db->select_assoc_ex($doc, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type` FROM `@docs` AS m WHERE m.`id` = #", $id)))
 			{
-				echo '{"code": 1, "message": "Invalid identifier"}';
+				echo '{"code": 1, "message": "Failed get document"}';
 				exit;
 			}
 
-			if(!$db->select(rpv("SELECT m.`id`, m.`samname`, m.`fname`, m.`lname`, m.`dep`, m.`org`, m.`pos`, m.`pint`, m.`pcell`, m.`mail`, m.`photo`, m.`map`, m.`x`, m.`y`, m.`visible` FROM `@contacts` AS m WHERE m.`id` = # LIMIT 1", $id)))
-			{
-				echo '{"code": 1, "message": "DB error"}';
-				exit;
-			}
+			assert_permission_ajax($doc[0]['pid'], LPD_ACCESS_READ);
 
-			echo '{"code": 0, "id": '.intval($db->data[0][0]).', "samname": "'.json_escape($db->data[0][1]).'", "firstname": "'.json_escape($db->data[0][2]).'", "lastname": "'.json_escape($db->data[0][3]).'", "department": "'.json_escape($db->data[0][4]).'", "company": "'.json_escape($db->data[0][5]).'", "position": "'.json_escape($db->data[0][6]).'", "phone": "'.json_escape($db->data[0][7]).'", "mobile": "'.json_escape($db->data[0][8]).'", "mail": "'.json_escape($db->data[0][9]).'", "photo": '.intval($db->data[0][10]).', "map": '.intval($db->data[0][11]).', "x": '.intval($db->data[0][12]).', "y": '.intval($db->data[0][13]).', "visible": '.intval($db->data[0][14]).'}';
+			$doc_type = intval($doc[0]['doc_type']);
+			for($i = 0; $i < count($g_doc_types); $i++)
+			{
+				$doc[0]['doc_type_'.($i+1)] = (($doc_type >> $i) & 0x01)?1:0;
+			}
+			
+			$result_json = array(
+				'code' => 0,
+				'message' => '',
+				'data' => $doc[0]
+			);
+
+			echo json_encode($result_json);
 		}
 		exit;
-
+		
 		case 'save':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
-			
+
 			$result_json = array(
 				'code' => 0,
 				'message' => '',
 				'errors' => array()
 			);
-			
+
 			$v_id = intval(@$_POST['id']);
 			$v_pid = intval(@$_POST['pid']);
 			$v_name = @$_POST['name'];
@@ -479,12 +530,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			$v_doc_type |= intval(@$_POST['doc_type_6'])?0x20:0;
 
 			//if(($v_id && !$user_perm->check_permission($v_pid, LPD_ACCESS_CREATE)) || (!$v_id && !$user_perm->check_permission($v_pid, LPD_ACCESS_EDIT)))
-			if(!$user_perm->check_permission($v_pid, LPD_ACCESS_WRITE))
-			{
-				//echo '{"code": 1, "message": "Access denied for create/edit document '.$v_id.' in section '.$v_pid.' for user '.$uid.'!"}';
-				//exit;
-			}
-			
+			assert_permission_ajax($v_pid, LPD_ACCESS_WRITE);
+
 			if(($v_status < 1) || ($v_status >= count($g_doc_status)))
 			{
 				$result_json['code'] = 1;
@@ -545,12 +592,12 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				echo json_encode($result_json);
 				exit;
 			}
-			
+
 			if(!$v_id)
 			{
 				$v_name = $v_order_date.$v_name;
-				
-				$db->put(rpv("INSERT INTO `@docs` (`pid`, `uid`, `create_date`, `modify_date`, `name`, `status`, `bis_unit`, `reg_upr`, `reg_otd`, `contr_name`, `order`, `order_date`, `doc_type`, `info`, `deleted`) VALUES (#, #, NOW(), NOW(), !, #, #, #, #, !, !, !, #, !, 0)",
+
+				if($db->put(rpv("INSERT INTO `@docs` (`pid`, `uid`, `create_date`, `modify_date`, `name`, `status`, `bis_unit`, `reg_upr`, `reg_otd`, `contr_name`, `order`, `order_date`, `doc_type`, `info`, `deleted`) VALUES (#, #, NOW(), NOW(), !, #, #, #, #, !, !, !, #, !, 0)",
 					$v_pid,
 					$uid,
 					$v_name,
@@ -563,13 +610,16 @@ function php_mailer($to, $name, $subject, $html, $plain)
 					$v_order_date,
 					$v_doc_type,
 					$v_info
-				));
-				$id = $db->last_id();
-				echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
+				)))
+				{
+					$id = $db->last_id();
+					echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
+					exit;
+				}
 			}
 			else
 			{
-				$db->put(rpv("UPDATE `@docs` SET `uid` = #, `modify_date` = NOW(), `name` = !, `status` = #, `bis_unit` = !, `reg_upr` = #, `reg_otd` = #, `contr_name` = !, `order` = !, `order_date` = !, `doc_type` = #, `info` = ! WHERE `id` = # AND `pid` = # LIMIT 1",
+				if($db->put(rpv("UPDATE `@docs` SET `uid` = #, `modify_date` = NOW(), `name` = !, `status` = #, `bis_unit` = !, `reg_upr` = #, `reg_otd` = #, `contr_name` = !, `order` = !, `order_date` = !, `doc_type` = #, `info` = ! WHERE `id` = # AND `pid` = # LIMIT 1",
 					$uid,
 					$v_name,
 					$v_status,
@@ -583,9 +633,14 @@ function php_mailer($to, $name, $subject, $html, $plain)
 					$v_info,
 					$v_id,
 					$v_pid
-				));
-				echo '{"code": 0, "id": '.$id.',"message": "Updated (ID '.$id.')"}';
+				)))
+				{
+					echo '{"code": 0, "id": '.$id.',"message": "Updated (ID '.$id.')"}';
+					exit;
+				}
 			}
+
+			echo '{"code": 1, "id": '.$id.',"message": "Error: '.json_escape($db->get_last_error()).'"}';
 		}
 		exit;
 
@@ -593,7 +648,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		{
 			header("Content-Type: text/html; charset=utf-8");
 
-			$db->select_assoc_ex($doc, rpv("SELECT m.`id`, m.`pid`, m.`uid`, m.`create_date`, m.`modify_date`, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, m.`order_date`, m.`doc_type` FROM `@docs` AS m WHERE m.`id` = #", $id));
+			$db->select_assoc_ex($doc, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type` FROM `@docs` AS m WHERE m.`id` = #", $id));
 
 			if(!$user_perm->check_permission($doc[0]['pid'], LPD_ACCESS_READ))
 			{
@@ -603,7 +658,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			}
 
 			$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
-			$db->select_assoc_ex($docs, rpv("SELECT m.`id`, m.`pid`, m.`uid`, m.`create_date`, m.`modify_date`, m.`name` FROM `@files` AS m WHERE m.`pid` = # AND m.`deleted` = 0 ORDER BY m.`name`", $id));
+			$db->select_assoc_ex($files, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name` FROM `@files` AS m WHERE m.`pid` = # AND m.`deleted` = 0 ORDER BY m.`name`", $id));
 
 			include('templ/tpl.doc.php');
 		}
@@ -621,7 +676,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			header("Content-Type: text/html; charset=utf-8");
 
 			$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
-			$db->select_assoc_ex($docs, rpv("SELECT m.`id`, m.`pid`, m.`uid`, m.`create_date`, m.`modify_date`, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, m.`order_date`, m.`doc_type` FROM `@docs` AS m WHERE m.`pid` = # AND m.`deleted` = 0 ORDER BY m.`modify_date`", $id));
+			$db->select_assoc_ex($docs, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type` FROM `@docs` AS m WHERE m.`pid` = # AND m.`deleted` = 0 ORDER BY m.`modify_date`", $id));
 
 			include('templ/tpl.main.php');
 		}

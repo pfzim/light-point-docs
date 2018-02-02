@@ -17,8 +17,7 @@ function escapeHtml(text)
 
 function json2url(data)
 {
-	return Object.keys(data).map
-	(
+	return Object.keys(data).map(
 		function(k)
 		{
 			return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
@@ -107,129 +106,11 @@ function f_http(url, _f_callback, _callback_params, content_type, data)
 	return true;
 }
 
-function f_sw_img(ev)
-{
-	var el_src = ev.target || ev.srcElement;
-	var img = el_src.parentNode.getAttribute('data-photo');
-	if(parseInt(img, 10))
-	{
-		var el = gi('userphoto');
-		el.src = 'photos/t'+el_src.parentNode.getAttribute('data-id')+'.jpg';
-		el = gi('imgblock');
-		imgblock.style.display = 'block';
-		imgblock.style.left = (ev.clientX+10)  + "px";
-		imgblock.style.top = (ev.clientY+10)  + "px";
-	}
-}
-
-function f_mv_img(ev)
-{
-	var el = gi('imgblock');
-	if(el)
-	{
-		el.style.left = (ev.clientX+10)  + "px";
-		el.style.top = (ev.clientY+10)  + "px";
-	}
-}
-
-function f_sw_map(ev)
-{
-	var el_src = ev.target || ev.srcElement;
-	var id = parseInt(el_src.parentNode.getAttribute('data-map'), 10);
-	if(id)
-	{
-		var el = gi('map-container');
-		var x = parseInt(el_src.parentNode.getAttribute('data-x'), 10);
-		var y = parseInt(el_src.parentNode.getAttribute('data-y'), 10);
-		el.style.display = 'block';
-		el.onclick = function() {gi('map-container').style.display = 'none';};
-		var map = gi('map-image');
-		map.src = '';
-		map.onload = function(x, y)
-		{
-			return function(ev)
-			{
-				var el = gi('map-marker');
-				var el_src = gi('map-image');
-				if(el)
-				{
-					el.onclick = null;
-					el.style.display = 'block';
-					el.style.left = (el_src.offsetLeft + x - el.width/2)  + "px";
-					el.style.top = (el_src.offsetTop + y - el.height/2)  + "px";
-					//alert("    x: "+(el_src.offsetLeft + x) +"    y: "+(el_src.offsetTop + y));
-				}
-			}
-		}(x, y);
-		map.src = 'templ/map' + id + '.png';
-	}
-}
-
-function f_map_set(ev)
+function f_delete_doc(ev)
 {
 	var el_src = ev.target || ev.srcElement;
 	var id = el_src.parentNode.parentNode.getAttribute('data-id');
-	var map = el_src.getAttribute('data-map');
-	gi('map-container').onclick = null;
-	gi('map-image').onload = null;
-	gi('map-image').src = 'templ/map'+map+'.png';
-	gi('map-container').style.display='block';
-	gi('map-marker').style.display='none';
-	gi('map-image').onclick = function(event)
-	{
-		gi('map-marker').style.display='block';
-		gi('map-marker').style.left = (event.clientX - gi('map-marker').width/2)  + "px";
-		gi('map-marker').style.top = (event.clientY - gi('map-marker').height/2)  + "px";
-		gi('map-marker').onclick = function()
-		{
-			f_set_location(id, map, (gi('map-marker').offsetLeft + gi('map-marker').width/2) - gi('map-image').offsetLeft, (gi('map-marker').offsetTop + gi('map-marker').height/2) - gi('map-image').offsetTop);
-			gi('map-container').style.display='none';
-			gi('map-image').onclick = null;
-		};
-	};
-};
-
-function f_hide(ev)
-{
-	var el_src = ev.target || ev.srcElement;
-	var id = el_src.parentNode.parentNode.getAttribute('data-id');
-	f_http("pb.php?"+json2url({'action': 'hide', 'id': id }),
-		function(data, el)
-		{
-			f_notify(data.message, data.code?"error":"success");
-			if(!data.code)
-			{
-				el.textContent = 'Show';
-				el.onclick = function(event) { f_show(event); };
-			}
-		},
-		el_src
-	);
-};
-
-function f_show(ev)
-{
-	var el_src = ev.target || ev.srcElement;
-	var id = el_src.parentNode.parentNode.getAttribute('data-id');
-	f_http("pb.php?"+json2url({'action': 'show', 'id': id }),
-		function(data, el)
-		{
-			f_notify(data.message, data.code?"error":"success");
-			if(!data.code)
-			{
-				el.textContent = 'Hide';
-				el.onclick = function(event) { f_hide(event); };
-			}
-		},
-		el_src
-	);
-};
-
-function f_delete(ev)
-{
-	var el_src = ev.target || ev.srcElement;
-	var id = el_src.parentNode.parentNode.getAttribute('data-id');
-	f_http("pb.php?"+json2url({'action': 'delete', 'id': id }),
+	f_http("lpd.php?"+json2url({'action': 'delete_doc', 'id': id }),
 		function(data, el)
 		{
 			f_notify(data.message, data.code?"error":"success");
@@ -237,7 +118,24 @@ function f_delete(ev)
 			{
 				var row = el.parentNode.parentNode;
 				row.parentNode.removeChild(row);
+			}
+		},
+		el_src
+	);
+};
 
+function f_delete_file(ev)
+{
+	var el_src = ev.target || ev.srcElement;
+	var id = el_src.parentNode.parentNode.getAttribute('data-id');
+	f_http("lpd.php?"+json2url({'action': 'delete_file', 'id': id }),
+		function(data, el)
+		{
+			f_notify(data.message, data.code?"error":"success");
+			if(!data.code)
+			{
+				var row = el.parentNode.parentNode;
+				row.parentNode.removeChild(row);
 			}
 		},
 		el_src
@@ -384,8 +282,9 @@ function f_edit(ev, form_id)
 	var id = 0;
 	if(ev)
 	{
-		var el_src = ev.target || ev.srcElement;
-		id = el_src.parentNode.parentNode.getAttribute('data-id');
+		//var el_src = ev.target || ev.srcElement;
+		//id = el_src.parentNode.parentNode.getAttribute('data-id');
+		id = ev;
 	}
 	if(!id)
 	{
@@ -422,7 +321,7 @@ function f_edit(ev, form_id)
 	}
 	else
 	{
-		f_http("pb.php?"+json2url({'action': 'get', 'id': id }),
+		f_http("lpd.php?"+json2url({'action': 'get', 'id': id }),
 			function(data, params)
 			{
 				if(data.code)
@@ -436,13 +335,16 @@ function f_edit(ev, form_id)
 					{
 						if(el.elements[i].name)
 						{
-							if(el.elements[i].type == 'checkbox')
+							if(data.data[el.elements[i].name])
 							{
-								el.elements[i].checked = (parseInt(data[el.elements[i].name], 10) != 0);
-							}
-							else
-							{
-								el.elements[i].value = data[el.elements[i].name];
+								if(el.elements[i].type == 'checkbox')
+								{
+									el.elements[i].checked = (parseInt(data.data[el.elements[i].name], 10) != 0);
+								}
+								else
+								{
+									el.elements[i].value = data.data[el.elements[i].name];
+								}
 							}
 						}
 					}
@@ -454,16 +356,17 @@ function f_edit(ev, form_id)
 	}
 }
 
-function f_upload(id)
+function f_upload()
 {
 	var fd = new FormData(gi("file-upload"));
-	f_http("lpd.php?action=upload&id="+id,
+	f_http("lpd.php?action=upload",
 		function(data, params)
 		{
 			f_notify(data.message, data.code?"error":"success");
 			if(!data.code)
 			{
 				//f_update_row(data.id);
+				gi('file-upload-id').value = 0;
 				window.location = window.location;
 			}
 		},
@@ -475,7 +378,7 @@ function f_upload(id)
 	return false;
 }
 
-function f_photo(ev)
+function f_replace_file(ev)
 {
 	var id = 0;
 	if(ev)
@@ -485,11 +388,7 @@ function f_photo(ev)
 	}
 	if(id)
 	{
-		gi('upload').onchange = function(id) {
-			return function() {
-				f_upload(id);
-			}
-		}(id);
+		gi('file-upload-id').value = id;
 		gi('upload').click();
 	}
 }
@@ -571,39 +470,6 @@ function f_hide_selected(ev)
 	return false;
 }
 
-function si(ev)
-{
-	var el_src = ev.target || ev.srcElement;
-	var pX = ev.pageX || (ev.clientX + (document.documentElement && document.documentElement.scrollLeft || document.body && document.body.scrollLeft || 0) - (document.documentElement.clientLeft || 0));
-	var pY = ev.pageY || (ev.clientY + (document.documentElement && document.documentElement.scrollTop || document.body && document.body.scrollTop || 0) - (document.documentElement.clientTop || 0));
-	document.getElementById('popup').style.display = 'block';
-	document.getElementById('popup').style.left = (pX+10)  + "px";
-	document.getElementById('popup').style.top = (pY+10)  + "px";
-	if(parseInt(el_src.getAttribute('data-photo'), 10))
-	{
-		document.getElementById('u_photo').src = 'photos/t'+el_src.getAttribute('data-id')+'.jpg';
-	}
-	else
-	{
-		document.getElementById('u_photo').src = 'templ/nophoto.png';
-	}
-	document.getElementById('u_name').innerHTML = escapeHtml(el_src.getAttribute('data-name'));
-	document.getElementById('u_position').innerHTML = escapeHtml(el_src.getAttribute('data-position'));
-	document.getElementById('u_phone').innerHTML = escapeHtml(el_src.getAttribute('data-phone'));
-}
-
-function mi(ev)
-{
-	var el = document.getElementById('popup');
-	if(el)
-	{
-		var pX = ev.pageX || (ev.clientX + (document.documentElement && document.documentElement.scrollLeft || document.body && document.body.scrollLeft || 0) - (document.documentElement.clientLeft || 0));
-		var pY = ev.pageY || (ev.clientY + (document.documentElement && document.documentElement.scrollTop || document.body && document.body.scrollTop || 0) - (document.documentElement.clientTop || 0));
-		el.style.left = (pX+10)  + "px";
-		el.style.top = (pY+10)  + "px";
-	}
-}
-
 function f_notify(text, type)
 {
 	var el;
@@ -635,44 +501,39 @@ function f_notify(text, type)
 	);
 }
 
-function lpd_init(_pid)
+function f_drag_leave(e)
 {
-	g_pid = _uid;
-	gi("upload").onchange = function(event)
-	{
-		var files = event.target.files;
-		for(var i=0, n=files.length;i<n;i++)
-		{
-			f_upload(uidd, idd, files[i], k++, 0, 0);
-		}
-		return false;
-	};
+	gi('dropzone').className = "";
+}
 
-	window.onbeforeunload = function(e)
-	{
-		for(var i=0, n=xhttp.length;i<n;i++)
-		{
-			if(xhttp[i])
-			{
-				var message = "Your have active uploads. Are you sure want to leave the page and terminate all uploads?";
-				f_popup('Confirm exit', message);
+function f_drag_over(e)
+{
+	e.stopPropagation();
+	e.preventDefault();
+	gi('dropzone').className = (e.type == "dragover" ? "hover" : "");
+}
 
-				if (typeof e == "undefined")
-				{
-					e = window.event;
-				}
-				if (e)
-				{
-					e.returnValue = message;
-				}
-				return message;
-			}
-		}
-	};
+function f_file_drop(e)
+{
+	f_drag_over(e);
 
+	var files = e.target.files || e.dataTransfer.files;
+
+	if (typeof files === 'undefined')
+		return;
+
+	e.stopPropagation();
+	e.preventDefault();
+
+	gi('upload').files = files;
+	f_upload();
+}
+
+function lpd_init()
+{
 	var filedrag = document.getElementsByTagName('body')[0];
 
-	filedrag.addEventListener("dragover", DragOver, false);
-	filedrag.addEventListener("dragleave", DragLeave, false);
-	filedrag.addEventListener("drop", function(event) { FileDrop(event, uid, id); }, false);
+	filedrag.addEventListener("dragover", f_drag_over, false);
+	filedrag.addEventListener("dragleave", f_drag_leave, false);
+	filedrag.addEventListener("drop", f_file_drop, false);
 }

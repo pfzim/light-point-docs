@@ -3,7 +3,7 @@
 	g_pid = <?php eh($id); ?>;
 </script>
 		<h3 align="center">Light Point Docs</h3>
-		<span class="command f-right" onclick="f_edit(null, 'form1');">Create document</span>
+		<span class="command" onclick="f_edit(null, 'form1');">Создать документ</span>
 <div>
 	<div style="float: left">
 		<ul style="list-style-type: none;margin-bottom: 0px;margin-left: 0px;margin-right: 0px;margin-top: 0px;overflow-wrap: break-word;padding-left: 0px;">
@@ -16,15 +16,16 @@
 		<table id="table" class="main-table">
 			<thead>
 			<tr>
-				<th width="20%">Name</th>
-				<th width="10%">Status</th>
-				<th width="10%">bis_unit</th>
-				<th width="25%">reg_upr</th>
-				<th width="10%">reg_otd</th>
-				<th width="10%">contr_name</th>
-				<th width="10%">order</th>
-				<th width="10%">Date</th>
-				<th width="10%">Type</th>
+				<th width="20%">Нименование</th>
+				<th width="10%">Статус</th>
+				<th width="10%">Бизнес юнит</th>
+				<th width="25%">Региональное управление</th>
+				<th width="10%">Региональное отделение</th>
+				<th width="10%">Контрагент</th>
+				<th width="10%">Ордер</th>
+				<th width="10%">Дата ордера</th>
+				<th width="10%">Тип документа</th>
+				<th width="10%">Операции</th>
 			</tr>
 			</thead>
 			<tbody id="table-data">
@@ -39,6 +40,9 @@
 				<td><?php eh($row['order']); ?></td>
 				<td><?php eh($row['order_date']); ?></td>
 				<td><?php eh(doc_type_to_string(intval($row['doc_type']))); ?></td>
+				<td>
+					<span class="command" onclick="f_delete_doc(event);">Удалить</span>
+				</td>
 			</tr>
 		<?php } ?>
 			</tbody>
