@@ -3,7 +3,6 @@
 	g_pid = <?php eh($id); ?>;
 </script>
 		<h3 align="center">Light Point Docs</h3>
-		<span class="command" onclick="f_edit(null, 'form1');">Создать документ</span>
 <div>
 	<div style="float: left">
 		<ul style="list-style-type: none;margin-bottom: 0px;margin-left: 0px;margin-right: 0px;margin-top: 0px;overflow-wrap: break-word;padding-left: 0px;">
@@ -13,6 +12,7 @@
 		</ul>
 	</div>
 	<div>
+		<span class="command" onclick="f_edit(null, 'form1');">Создать документ</span>
 		<table id="table" class="main-table">
 			<thead>
 			<tr>

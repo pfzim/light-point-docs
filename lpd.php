@@ -619,9 +619,9 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			}
 			else
 			{
-				if($db->put(rpv("UPDATE `@docs` SET `uid` = #, `modify_date` = NOW(), `name` = !, `status` = #, `bis_unit` = !, `reg_upr` = #, `reg_otd` = #, `contr_name` = !, `order` = !, `order_date` = !, `doc_type` = #, `info` = ! WHERE `id` = # AND `pid` = # LIMIT 1",
+				if($db->put(rpv("UPDATE `@docs` SET `uid` = #, `modify_date` = NOW(), `status` = #, `bis_unit` = !, `reg_upr` = #, `reg_otd` = #, `contr_name` = !, `order` = !, `order_date` = !, `doc_type` = #, `info` = ! WHERE `id` = # AND `pid` = # LIMIT 1",
 					$uid,
-					$v_name,
+					//$v_name, , `name` = !
 					$v_status,
 					$v_bis_unit,
 					$v_reg_upr,
@@ -648,7 +648,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		{
 			header("Content-Type: text/html; charset=utf-8");
 
-			$db->select_assoc_ex($doc, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type` FROM `@docs` AS m WHERE m.`id` = #", $id));
+			$db->select_assoc_ex($doc, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type`, m.`info` FROM `@docs` AS m WHERE m.`id` = #", $id));
 
 			if(!$user_perm->check_permission($doc[0]['pid'], LPD_ACCESS_READ))
 			{

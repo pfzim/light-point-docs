@@ -38,6 +38,9 @@
 			<tr>
 				<td>Тип документа:</td><td><?php eh(doc_type_to_string(intval($doc[0]['doc_type']))); ?></td>
 			</tr>
+			<tr>
+				<td>Описание:</td><td><?php eh($doc[0]['info']); ?></td>
+			</tr>
 			</tbody>
 		</table>
 		<span class="command" onclick="f_edit(<?php eh($id); ?>, 'form1');">Изменить</span>
