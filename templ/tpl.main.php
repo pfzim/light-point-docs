@@ -6,7 +6,7 @@
 <div>
 	<div style="float: left">
 		<ul style="list-style-type: none;margin-bottom: 0px;margin-left: 0px;margin-right: 0px;margin-top: 0px;overflow-wrap: break-word;padding-left: 0px;">
-		<?php $i = 0; foreach($sections as $row) { $i++; ?>
+		<?php $i = 0; foreach($sections as &$row) { $i++; ?>
 		<li><a href="?id=<?php eh($row[0]); ?>"><?php eh($row[1]); ?></a></li>
 		<?php } ?>
 		</ul>
@@ -29,7 +29,7 @@
 			</tr>
 			</thead>
 			<tbody id="table-data">
-		<?php $i = 0; foreach($docs as $row) { $i++; ?>
+		<?php $i = 0; foreach($docs as &$row) { $i++; ?>
 			<tr id="<?php eh("row".$row['id']); ?>" data-id=<?php eh($row['id']);?>>
 				<td><a href="?action=doc&id=<?php eh($row['id']); ?>"><?php eh($row['name']); ?></a></td>
 				<td><?php eh($g_doc_status[intval($row['status'])]); ?></td>

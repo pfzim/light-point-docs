@@ -108,11 +108,13 @@ function f_http(url, _f_callback, _callback_params, content_type, data)
 
 function f_delete_doc(ev)
 {
+	gi('loading').style.display = 'block';
 	var el_src = ev.target || ev.srcElement;
 	var id = el_src.parentNode.parentNode.getAttribute('data-id');
 	f_http("lpd.php?"+json2url({'action': 'delete_doc', 'id': id }),
 		function(data, el)
 		{
+			gi('loading').style.display = 'none';
 			f_notify(data.message, data.code?"error":"success");
 			if(!data.code)
 			{
@@ -126,11 +128,13 @@ function f_delete_doc(ev)
 
 function f_delete_file(ev)
 {
+	gi('loading').style.display = 'block';
 	var el_src = ev.target || ev.srcElement;
 	var id = el_src.parentNode.parentNode.getAttribute('data-id');
 	f_http("lpd.php?"+json2url({'action': 'delete_file', 'id': id }),
 		function(data, el)
 		{
+			gi('loading').style.display = 'none';
 			f_notify(data.message, data.code?"error":"success");
 			if(!data.code)
 			{
@@ -179,9 +183,11 @@ function f_save(form_id)
 	//alert(json2url(form_data));
 	//return;
 
+	gi('loading').style.display = 'block';
 	f_http("lpd.php?action=save",
 		function(data, params)
 		{
+			gi('loading').style.display = 'none';
 			f_notify(data.message, data.code?"error":"success");
 			if(!data.code)
 			{
@@ -321,9 +327,11 @@ function f_edit(ev, form_id)
 	}
 	else
 	{
+		gi('loading').style.display = 'block';
 		f_http("lpd.php?"+json2url({'action': 'get', 'id': id }),
 			function(data, params)
 			{
+				gi('loading').style.display = 'none';
 				if(data.code)
 				{
 					f_notify(data.message, "error");
@@ -358,15 +366,17 @@ function f_edit(ev, form_id)
 
 function f_upload()
 {
+	gi('loading').style.display = 'block';
 	var fd = new FormData(gi("file-upload"));
 	f_http("lpd.php?action=upload",
 		function(data, params)
 		{
+			gi('file-upload-id').value = 0;
+			gi('loading').style.display = 'none';
 			f_notify(data.message, data.code?"error":"success");
 			if(!data.code)
 			{
 				//f_update_row(data.id);
-				gi('file-upload-id').value = 0;
 				window.location = window.location;
 			}
 		},
