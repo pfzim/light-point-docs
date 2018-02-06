@@ -1,14 +1,14 @@
 <?php include("tpl.header.php"); ?>
 		<h3 align="center">Light Point Docs</h3>
 <div>
-	<div style="float: left">
+	<div style="float: left; width: 200px;">
 		<ul style="list-style-type: none;margin-bottom: 0px;margin-left: 0px;margin-right: 0px;margin-top: 0px;overflow-wrap: break-word;padding-left: 0px;">
 		<?php $i = 0; foreach($sections as &$row) { $i++; ?>
 		<li><a href="?id=<?php eh($row[0]); ?>"><?php eh($row[1]); ?></a></li>
 		<?php } ?>
 		</ul>
 	</div>
-	<div>
+	<div style="overflow: hidden;">
 		<table>
 			<tbody>
 			<tr>

@@ -4,16 +4,16 @@
 </script>
 		<h3 align="center">Light Point Docs</h3>
 <div>
-	<div style="float: left">
+	<div style="float: left; width: 200px;">
 		<ul style="list-style-type: none;margin-bottom: 0px;margin-left: 0px;margin-right: 0px;margin-top: 0px;overflow-wrap: break-word;padding-left: 0px;">
 		<?php $i = 0; foreach($sections as &$row) { $i++; ?>
 		<li><a href="?id=<?php eh($row[0]); ?>"><?php eh($row[1]); ?></a></li>
 		<?php } ?>
 		</ul>
 	</div>
-	<div>
+	<div style="overflow: hidden;">
 		<span class="command" onclick="f_edit(null, 'form1');">Создать документ</span>
-		<table id="table" class="main-table">
+		<table id="table" class="main-table" width="100%">
 			<thead>
 			<tr>
 				<th width="20%">Нименование</th>
@@ -54,6 +54,7 @@
 		<div id="form1-container" class="modal-container" style="display: none">
 			<span class="close" onclick="this.parentNode.style.display='none'">&times;</span>
 			<div class="modal-content">
+				<span class="close" onclick="this.parentNode.parentNode.style.display='none'" style="color: black;">&times;</span>
 				<form id="form1">
 				<h3>Create document</h3>
 				<input name="id" type="hidden" value=""/>

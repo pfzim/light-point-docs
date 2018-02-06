@@ -111,6 +111,9 @@ body {
     width: 100%;
     color: darkgrey;
 }
+.main-table th {
+    text-align: left;
+}
 .main-table td {
     vertical-align: top;
 }
