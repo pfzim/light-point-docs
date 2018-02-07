@@ -271,7 +271,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				$j = 0;
 				$list_safe = '';
 				$list = explode(',', $_POST['list']);
-				foreach($list as $id)
+				foreach($list as &$id)
 				{
 					if($j > 0)
 					{
@@ -425,7 +425,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				exit;
 			}
 
-			foreach($files as $file)
+			foreach($files as &$file)
 			{
 				if(!$db->put(rpv("UPDATE `@files` SET `deleted` = 1 WHERE `id` = # LIMIT 1", $file[0])))
 				{
@@ -448,14 +448,14 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		{
 			if($db->select_ex($file, rpv("SELECT m.`name`, j1.`pid` FROM `@files` AS m LEFT JOIN `@docs` AS j1 ON j1.`id` = m.`pid` WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $id)))
 			{
-				$db->disconnect(); // release database connection
-
 				if(!$user_perm->check_permission($file[0][1], LPD_ACCESS_READ))
 				{
 					$error_msg = "Access denied to section ".$file[0][1]." for user ".$uid."!";
 					//include('templ/tpl.message.php');
 					//exit;
 				}
+
+				$db->disconnect(); // release database connection
 
 				$filename = dirname(__FILE__).DIRECTORY_SEPARATOR.'files'.DIRECTORY_SEPARATOR.'f'.$id;
 				if(file_exists($filename))
@@ -514,13 +514,13 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 			$v_id = intval(@$_POST['id']);
 			$v_pid = intval(@$_POST['pid']);
-			$v_name = @$_POST['name'];
+			$v_name = trim(@$_POST['name']);
 			$v_status = intval(@$_POST['status']);
-			$v_bis_unit = @$_POST['bis_unit'];
+			$v_bis_unit = trim(@$_POST['bis_unit']);
 			$v_reg_upr = intval(@$_POST['reg_upr']);
 			$v_reg_otd = intval(@$_POST['reg_otd']);
-			$v_contr_name = @$_POST['contr_name'];
-			$v_order = @$_POST['order'];
+			$v_contr_name = trim(@$_POST['contr_name']);
+			$v_order = trim(@$_POST['order']);
 			$v_order_date = @$_POST['order_date'];
 			$v_info = @$_POST['info'];
 
