@@ -314,6 +314,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			assert_permission_ajax($doc[0][0], LPD_ACCESS_WRITE);
 
 			$files_dir = dirname(__FILE__).DIRECTORY_SEPARATOR.'files'.DIRECTORY_SEPARATOR;
+			
+			$db->start_transaction();
 
 			if($v_id)
 			{
@@ -338,7 +340,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 				rename($files_dir.'f'.$v_id, $files_dir.'f'.$v_id.'_'.$last_id);
 
-				if(!$db->put(rpv("UPDATE `@files` SET `modify_date` = NOW(), `uid` = # WHERE `id` = # LIMIT 1", $uid, $v_id)))
+				if(!$db->put(rpv("UPDATE `@files` SET `name` = !, `modify_date` = NOW(), `uid` = # WHERE `id` = # LIMIT 1", @$_FILES['file']['name'][0], $uid, $v_id)))
 				{
 					echo '{"code": 1, "message": "Failed upload"}';
 					exit;
@@ -370,6 +372,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				}
 			}
 
+			$db->commit();
 			echo '{"code": 0, "message": "Files added"}';
 		}
 		exit;
@@ -676,9 +679,15 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			header("Content-Type: text/html; charset=utf-8");
 
 			$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
-			$db->select_assoc_ex($docs, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type` FROM `@docs` AS m WHERE m.`pid` = # AND m.`deleted` = 0 ORDER BY m.`modify_date`", $id));
-
-			include('templ/tpl.main.php');
+			if($id > 0)
+			{
+				$db->select_assoc_ex($docs, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type` FROM `@docs` AS m WHERE m.`pid` = # AND m.`deleted` = 0 ORDER BY m.`modify_date`", $id));
+				include('templ/tpl.main.php');
+			}
+			else
+			{
+				include('templ/tpl.home.php');
+			}
 		}
 		exit;
 

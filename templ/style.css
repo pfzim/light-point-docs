@@ -117,7 +117,7 @@ body {
 .main-table td {
     vertical-align: top;
 }
-.main-table tr:hover {
+.main-table tr:hover td {
     background-color: #E0E0E0;
 }
 .expand-list {
@@ -210,8 +210,10 @@ body {
     right: 10px;
     font-weight: bold;
     font-size: 24pt;
-    color: white;
     cursor: pointer;
+}
+.white {
+    color: white;
 }
 #status {
     text-align: center;
@@ -368,7 +370,7 @@ body {
 .form-field {
     border: 1px solid #ccc;
     border-radius: 3px;
-    padding: 8px;
+    padding: 6px;
     margin-bottom: 5px;
     width: 280px;
 }
@@ -379,7 +381,25 @@ body {
     border-radius: 3px;
     padding: 5px;
     margin-bottom: 5px;
-    width: 280px;
+    width: 130px;
+}
+.button-accept {
+    background-color: #d6f5d6;
+    color: black;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 5px;
+    margin-bottom: 5px;
+    width: 130px;
+}
+.button-decline {
+    background-color: #ffe6e6;
+    color: black;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 5px;
+    margin-bottom: 5px;
+    width: 130px;
 }
 .form-error {
 	padding: 5px;
@@ -498,4 +518,35 @@ body {
 	z-index: 2;
 	width: 0;
 	height: 0;
+}
+.left-menu .active {
+    background-color: #DDDDDD;
+}
+.left-menu {
+	float: left;
+	width: 200px;
+    background-color: #FAFAFA;
+	border-radius: 4px;
+    margin-right: 10px;
+}
+.left-menu ul {
+	list-style-type: none;
+	margin: 5px;
+	overflow-wrap: break-word;
+	padding-left: 0px;
+}
+.left-menu li a {
+    display: block;
+    color: #000;
+    padding: 8px 16px;
+    text-decoration: none;
+}
+.left-menu li a:hover {
+    background-color: #555;
+    color: white;
+}
+.doc-info {
+    background-color: #FAFAFA;
+	border-radius: 4px;
+	padding: 10px;
 }
