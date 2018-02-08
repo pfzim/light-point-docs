@@ -318,10 +318,16 @@ body {
 .server-info {
     font-size: 8pt;
 }
+.command {
+    padding: 1px;
+    background-color: #DDDDDD;
+	border-radius: 3px;
+}
 .command:hover {
     cursor: pointer;
     text-decoration: underline;
     text-decoration-style: dashed;
+    background-color: #FAFAFA;
 }
 .boldtext {
     font-weight: bold;
@@ -338,22 +344,6 @@ body {
     background: rgba(0, 0, 0, 0.7);
     z-index: 1001;
 }
-.map-image {
-    position: absolute;
-    z-index: 1002;
-    overflow: auto;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: auto;
-}
-.map-marker {
-    position: fixed;
-    z-index: 1003;
-    top: 0px;
-    left: 0px;
-}
 .modal-content {
     background-color: white;
     margin: 10px auto;
@@ -363,6 +353,7 @@ body {
     top: 50%;
     border-radius: 4px;
     transform: translate(-50%, -50%);
+	overflow-y: auto;
 }
 .form-title {
     margin-bottom: 3px;

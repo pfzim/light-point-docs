@@ -57,7 +57,7 @@ class MySQLDB
 
 	private function connect($read_only)
 	{
-		if(!$read_only || $this->db_ro_same_rw)
+		if(!$read_only || $this->db_ro_same_rw || $this->transaction_active)
 		{
 			if(!$this->link_rw)
 			{
@@ -190,10 +190,10 @@ class MySQLDB
 			return FALSE;
 		}
 
-		$res = mysqli_query($this->db_ro_same_rw ? $this->link_rw : $this->link_ro, $query);
+		$res = mysqli_query(($this->db_ro_same_rw || $this->transaction_active) ? $this->link_rw : $this->link_ro, $query);
 		if(!$res)
 		{
-			$this->error(mysqli_error($this->db_ro_same_rw ? $this->link_rw : $this->link_ro));
+			$this->error(mysqli_error(($this->db_ro_same_rw || $this->transaction_active) ? $this->link_rw : $this->link_ro));
 			return FALSE;
 		}
 
@@ -226,10 +226,10 @@ class MySQLDB
 			return FALSE;
 		}
 
-		$res = mysqli_query($this->db_ro_same_rw ? $this->link_rw : $this->link_ro, $query);
+		$res = mysqli_query(($this->db_ro_same_rw || $this->transaction_active) ? $this->link_rw : $this->link_ro, $query);
 		if(!$res)
 		{
-			$this->error(mysqli_error($this->db_ro_same_rw ? $this->link_rw : $this->link_ro));
+			$this->error(mysqli_error(($this->db_ro_same_rw || $this->transaction_active) ? $this->link_rw : $this->link_ro));
 			return FALSE;
 		}
 
