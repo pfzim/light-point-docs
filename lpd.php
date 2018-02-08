@@ -241,7 +241,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		header('Location: '.$self.'?action=login');
 		exit;
 	}
-	
+
 	switch($action)
 	{
 		case 'logoff':
@@ -300,7 +300,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			header("Content-Type: text/plain; charset=utf-8");
 
 			$v_id = intval(@$_POST['id']);		// id of file for replace
-			$v_pid = intval(@$_POST['pid']);	// id parent document
+			$v_pid = intval(@$_POST['pid']);	// id of parent document
 
 			if(!$db->select_ex($doc, rpv("SELECT m.`pid` FROM `@docs` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $v_pid))
 				|| empty($_FILES['file']['tmp_name'][0])
@@ -325,15 +325,15 @@ function php_mailer($to, $name, $subject, $html, $plain)
 					exit;
 				}
 
-				if(!$db->select_ex($file, rpv("SELECT m.`modify_date`, m.`uid` FROM `@files` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $v_id)))
+				if(!$db->select_ex($file, rpv("SELECT m.`name`, m.`modify_date`, m.`uid` FROM `@files` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $v_id)))
 				{
-					echo '{"code": 1, "message": "Failed upload"}';
+					echo '{"code": 1, "message": "Failed upload. Error #1"}';
 					exit;
 				}
 
-				if(!$db->put(rpv("INSERT INTO `@files_history` (`pid`, `modify_date`, `uid`, `deleted`) VALUES (#, NOW(), #, 0)", $v_id, $uid)))
+				if(!$db->put(rpv("INSERT INTO `@files_history` (`pid`, `name`, `modify_date`, `uid`, `deleted`) VALUES (#, !, !, #, 0)", $v_id, $file[0][0], $file[0][1], $file[0][2])))
 				{
-					echo '{"code": 1, "message": "Failed upload"}';
+					echo '{"code": 1, "message": "Failed upload. Error #2"}';
 					exit;
 				}
 				$last_id = $db->last_id();
@@ -342,13 +342,13 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 				if(!$db->put(rpv("UPDATE `@files` SET `name` = !, `modify_date` = NOW(), `uid` = # WHERE `id` = # LIMIT 1", @$_FILES['file']['name'][0], $uid, $v_id)))
 				{
-					echo '{"code": 1, "message": "Failed upload"}';
+					echo '{"code": 1, "message": "Failed upload. Error #3"}';
 					exit;
 				}
 
 				if(!@move_uploaded_file(@$_FILES['file']['tmp_name'][0], $files_dir.'f'.$v_id))
 				{
-					echo '{"code": 1, "message": "Failed upload"}';
+					echo '{"code": 1, "message": "Failed upload. Error #4"}';
 					exit;
 				}
 			}
@@ -358,7 +358,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				{
 					if(!$db->put(rpv("INSERT INTO `@files` (`pid`, `name`, `create_date`, `modify_date`, `uid`, `deleted`) VALUES (#, !, NOW(), NOW(), #, 0)", $v_pid, @$_FILES['file']['name'][$i], $uid)))
 					{
-						echo '{"code": 1, "message": "Failed upload"}';
+						echo '{"code": 1, "message": "Failed upload. Error #5"}';
 						exit;
 					}
 
@@ -366,13 +366,14 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 					if(!@move_uploaded_file($_FILES['file']['tmp_name'][$i], $files_dir.'f'.$v_id))
 					{
-						echo '{"code": 1, "message": "Failed upload"}';
+						echo '{"code": 1, "message": "Failed upload. Error #6"}';
 						exit;
 					}
 				}
 			}
 
 			$db->commit();
+
 			echo '{"code": 0, "message": "Files added"}';
 		}
 		exit;
@@ -413,15 +414,17 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 			assert_permission_ajax($doc[0][0], LPD_ACCESS_WRITE);
 
+			$db->start_transaction();
+			
 			if(!$db->put(rpv("UPDATE `@docs` SET `deleted` = 1 WHERE `id` = # LIMIT 1", $id)))
 			{
-				echo '{"code": 1, "message": "Failed delete"}';
+				echo '{"code": 1, "message": "Failed delete. Error #1"}';
 				exit;
 			}
 
 			if(!$db->select_ex($files, rpv("SELECT m.`id` FROM `@files` AS m WHERE m.`pid` = # AND m.`deleted` = 0", $id)))
 			{
-				echo '{"code": 1, "message": "Failed delete document"}';
+				echo '{"code": 1, "message": "Failed delete document. Error #2"}';
 				exit;
 			}
 
@@ -429,16 +432,18 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			{
 				if(!$db->put(rpv("UPDATE `@files` SET `deleted` = 1 WHERE `id` = # LIMIT 1", $file[0])))
 				{
-					echo '{"code": 1, "message": "Failed delete"}';
+					echo '{"code": 1, "message": "Failed delete. Error #3"}';
 					exit;
 				}
 
 				if(!$db->put(rpv("UPDATE `@files_history` SET `deleted` = 1 WHERE `pid` = #", $file[0])))
 				{
-					echo '{"code": 1, "message": "Failed delete"}';
+					echo '{"code": 1, "message": "Failed delete. Error #4"}';
 					exit;
 				}
 			}
+
+			$db->commit();
 
 			echo '{"code": 0, "id": '.$id.', "message": "Document deleted"}';
 		}

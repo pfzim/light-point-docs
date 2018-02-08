@@ -6,9 +6,12 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<title>Light Point Docs</title>
 		<link type="text/css" href="templ/style.css" rel="stylesheet" />
+		<?php if($uid) { ?>
 		<script src="lpd.js"></script>
+		<?php } ?>
 	</head>
 	<body>
+		<?php if($uid) { ?>
 		<ul class="menu-bar">
 			<li><a href="<?php eh("$self"); ?>">Home</a></li>
 			<ul style="float:right;list-style-type:none;">
@@ -19,3 +22,4 @@
 				<?php } ?>
 			</ul>
 		</ul>
+		<?php } ?>

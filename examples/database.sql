@@ -115,6 +115,7 @@ DROP TABLE IF EXISTS `lpd_files_history`;
 CREATE TABLE `lpd_files_history` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `pid` int(10) unsigned NOT NULL DEFAULT '0',
+  `name` varchar(255) NOT NULL,
   `modify_date` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `uid` int(10) unsigned NOT NULL DEFAULT '0',
   `deleted` int(10) unsigned NOT NULL DEFAULT '0',
