@@ -29,6 +29,7 @@ $g_doc_status = array("Undefined", "Создан", "Отфактурован", "
 $g_doc_reg_upr = array("Undefined", "Донское региональное управление", "Уральское региональное управление", "Приволжское региональное управление");
 $g_doc_reg_otd = array("Undefined", "Екатеринбург", "Ростов на Дону", "Ярославль");
 $g_doc_types = array("Торг12", "СФ", "1Т", "Доверенность", "Справка А", "Справка Б",);
+$g_rights = 'rw';
 
 function doc_type_to_string($doc_type)
 {
@@ -43,6 +44,19 @@ function doc_type_to_string($doc_type)
 		}
 	}
 	return $result;
+}
+
+function permissions_to_string($allow_bits)
+{
+	global $g_rights;
+	$result = '---------';
+	for($i = 0; $i < strlen($g_rights); $i++)
+	{
+		if((ord($permission[0]['allow_bits'][(int) ($i / 8)]) >> ($i % 8)) & 0x01)
+		{
+			$result[$i] = $g_rights[$i];
+		}
+	}
 }
 
 function set_permission_bit(&$bits, $bit)

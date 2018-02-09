@@ -26,7 +26,7 @@
 			<tr id="<?php eh("row".$row['id']); ?>" data-id=<?php eh($row['id']);?>>
 				<td><?php eh($row['id']); ?></td>
 				<td><?php eh($row['dn']); ?></td>
-				<td><?php eh(rights_to_string($row['allow'])); ?></td>
+				<td><?php eh(permissions_to_string($row['allow'])); ?></td>
 				<td>
 					<span class="command" onclick="f_edit(event, 'permission');">Edit</span>
 					<span class="command" onclick="f_delete_rights(event);">Delete</span>
