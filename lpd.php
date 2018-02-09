@@ -52,7 +52,7 @@ function permissions_to_string($allow_bits)
 	$result = '---------';
 	for($i = 0; $i < strlen($g_rights); $i++)
 	{
-		if((ord($permission[0]['allow_bits'][(int) ($i / 8)]) >> ($i % 8)) & 0x01)
+		if((ord($allow_bits[(int) ($i / 8)]) >> ($i % 8)) & 0x01)
 		{
 			$result[$i] = $g_rights[$i];
 		}
