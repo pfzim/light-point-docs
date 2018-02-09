@@ -577,12 +577,12 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 			if(intval(@$_POST['allow_bit_1']))
 			{
-				set_pemission_bit($v_allow, LPD_ACCESS_READ);
+				set_permission_bit($v_allow, LPD_ACCESS_READ);
 			}
 
 			if(intval(@$_POST['allow_bit_2']))
 			{
-				set_pemission_bit($v_allow, LPD_ACCESS_WRITE);
+				set_permission_bit($v_allow, LPD_ACCESS_WRITE);
 			}
 
 			assert_permission_ajax(0, LPD_ACCESS_WRITE);	// level 0 have Write access mean admin
