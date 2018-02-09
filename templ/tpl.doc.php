@@ -2,7 +2,7 @@
 		<h3 align="center">Документ</h3>
 <div>
 <?php include("tpl.menu.php"); ?>
-	<div style="overflow: hidden;">
+	<div>
 		<div class="doc-info">
 		<table>
 			<tbody>
@@ -38,7 +38,7 @@
 			</tr>
 			</tbody>
 		</table>
-		<button class="button-accept" type="button" onclick="f_edit(<?php eh($id); ?>, 'form1');">Изменить</button>
+		<button class="button-accept" type="button" onclick="f_edit(<?php eh($id); ?>, 'document');">Изменить</button>
 		</div>
 		<table id="table" class="main-table">
 			<thead>

@@ -184,7 +184,7 @@ function f_save(form_id)
 	//return;
 
 	gi('loading').style.display = 'block';
-	f_http("lpd.php?action=save",
+	f_http("lpd.php?action=save_" + form_id,
 		function(data, params)
 		{
 			gi('loading').style.display = 'none';
@@ -328,7 +328,7 @@ function f_edit(ev, form_id)
 	else
 	{
 		gi('loading').style.display = 'block';
-		f_http("lpd.php?"+json2url({'action': 'get', 'id': id }),
+		f_http("lpd.php?"+json2url({'action': 'get_' + form_id, 'id': id }),
 			function(data, params)
 			{
 				gi('loading').style.display = 'none';

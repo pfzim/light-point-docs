@@ -45,6 +45,18 @@ function doc_type_to_string($doc_type)
 	return $result;
 }
 
+function set_permission_bit(&$bits, $bit)
+{
+	$bit--;
+	$bits[(int) ($bit / 8)] = chr(ord($bits[(int) ($bit / 8)]) | (0x1 << ($bit % 8)));
+}
+
+function unset_permission_bit(&$bits, $bit)
+{
+	$bit--;
+	$bits[(int) ($bit / 8)] = chr(ord($bits[(int) ($bit / 8)]) & ((0x1 << ($bit % 8)) ^ 0xF));
+}
+
 function assert_permission_ajax($section_id, $allow_bit)
 {
 	global $uid;
@@ -476,11 +488,40 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		}
 		exit;
 
-		case 'get':
+		case 'get_permission':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
 
-			if(!$db->select_assoc_ex($doc, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type` FROM `@docs` AS m WHERE m.`id` = #", $id)))
+			assert_permission_ajax(0, LPD_ACCESS_READ);
+
+			if(!$db->select_assoc_ex($permission, rpv("SELECT m.`oid`, m.`dn`, m.`allow_bits` FROM `@rights` AS m WHERE m.`id` = # LIMIT 1", $id)))
+			{
+				echo '{"code": 1, "message": "Failed get permissions"}';
+				exit;
+			}
+
+			$permission[0]['pid'] = &$permission[0]['oid'];
+			
+			for($i = 0; $i < 2; $i++)
+			{
+				$permission[0]['allow_'.($i+1)] = ((ord($permission[0]['allow_bits'][(int) ($i / 8)]) >> ($i % 8)) & 0x01)?1:0;
+			}
+			
+			$result_json = array(
+				'code' => 0,
+				'message' => '',
+				'data' => $permission[0]
+			);
+
+			echo json_encode($result_json);
+		}
+		exit;
+		
+		case 'get_document':
+		{
+			header("Content-Type: text/plain; charset=utf-8");
+
+			if(!$db->select_assoc_ex($doc, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type` FROM `@docs` AS m WHERE m.`id` = # LIMIT 1", $id)))
 			{
 				echo '{"code": 1, "message": "Failed get document"}';
 				exit;
@@ -504,7 +545,78 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		}
 		exit;
 		
-		case 'save':
+		case 'save_permission':
+		{
+			header("Content-Type: text/plain; charset=utf-8");
+
+			$result_json = array(
+				'code' => 0,
+				'message' => '',
+				'errors' => array()
+			);
+
+			$v_id = intval(@$_POST['id']);
+			$v_pid = intval(@$_POST['pid']);
+			$v_dn = trim(@$_POST['dn']);
+			$v_allow = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+
+			if(intval(@$_POST['allow_1']))
+			{
+				set_pemission_bit($v_allow, LPD_ACCESS_READ);
+			}
+
+			if(intval(@$_POST['allow_2']))
+			{
+				set_pemission_bit($v_allow, LPD_ACCESS_WRITE);
+			}
+
+			assert_permission_ajax(0, LPD_ACCESS_WRITE);	// level 0 have Write access mean admin
+
+			if(empty($v_dn))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'dn', 'msg' => 'Fill DN!');
+			}
+
+			if($result_json['code'])
+			{
+				$result_json['message'] = 'Not all required field filled!';
+				echo json_encode($result_json);
+				exit;
+			}
+
+			if(!$v_id)
+			{
+				if($db->put(rpv("INSERT INTO `@access` (`oid`, `dn`, `allow_bits`) VALUES (#, !, !)",
+					$v_pid,
+					$v_dn,
+					$v_allow
+				)))
+				{
+					$id = $db->last_id();
+					echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
+					exit;
+				}
+			}
+			else
+			{
+				if($db->put(rpv("UPDATE `@access` SET `dn` = !, `allow_bits` = ! WHERE `id` = # AND `oid` = # LIMIT 1",
+					$v_dn,
+					$v_allow,
+					$v_id,
+					$v_pid
+				)))
+				{
+					echo '{"code": 0, "id": '.$id.',"message": "Updated (ID '.$id.')"}';
+					exit;
+				}
+			}
+
+			echo '{"code": 1, "id": '.$id.',"message": "Error: '.json_escape($db->get_last_error()).'"}';
+		}
+		exit;
+
+		case 'save_document':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
 
@@ -645,6 +757,26 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			}
 
 			echo '{"code": 1, "id": '.$id.',"message": "Error: '.json_escape($db->get_last_error()).'"}';
+		}
+		exit;
+
+		case 'permissions':
+		{
+			header("Content-Type: text/html; charset=utf-8");
+
+			$db->select_assoc_ex($doc, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type`, m.`info` FROM `@docs` AS m WHERE m.`id` = #", $id));
+
+			if(!$user_perm->check_permission(0, LPD_ACCESS_READ))
+			{
+				$error_msg = "Access denied to section ".$doc[0]['pid']." for user ".$uid."!";
+				//include('templ/tpl.message.php');
+				//exit;
+			}
+
+			$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
+			$db->select_assoc_ex($permissions, rpv("SELECT m.`id`, m.`oid`, m.`dn`, m.`allow_bits` FROM `@rights` AS m WHERE m.`oid` = # ORDER BY m.`dn`", $id));
+
+			include('templ/tpl.admin.php');
 		}
 		exit;
 

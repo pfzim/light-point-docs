@@ -1,9 +1,9 @@
 <?php if(!defined("Z_PROTECTED")) exit; ?>
-		<div id="form1-container" class="modal-container" style="display: none">
+		<div id="document-container" class="modal-container" style="display: none">
 			<span class="close white" onclick="this.parentNode.style.display='none'">&times;</span>
 			<div class="modal-content">
 				<span class="close" onclick="this.parentNode.parentNode.style.display='none'">&times;</span>
-				<form id="form1">
+				<form id="document">
 				<h3>Создать документ</h3>
 				<input name="id" type="hidden" value=""/>
 				<input name="pid" type="hidden" value=""/>
@@ -54,7 +54,7 @@
 				<div id="info-error" class="form-error"></div>
 				</form>
 				<div class="f-right">
-					<button class="button-accept" type="button" onclick="f_save('form1');">Сохранить</button>
+					<button class="button-accept" type="button" onclick="f_save('document');">Сохранить</button>
 					&nbsp;
 					<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.style.display='none'">Отмена</button>
 				</div>
