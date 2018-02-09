@@ -509,7 +509,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 			assert_permission_ajax(0, LPD_ACCESS_READ);
 
-			if(!$db->select_assoc_ex($permission, rpv("SELECT m.`oid`, m.`dn`, m.`allow_bits` FROM `@access` AS m WHERE m.`id` = # LIMIT 1", $id)))
+			if(!$db->select_assoc_ex($permission, rpv("SELECT m.`id`, m.`oid`, m.`dn`, m.`allow_bits` FROM `@access` AS m WHERE m.`id` = # LIMIT 1", $id)))
 			{
 				echo '{"code": 1, "message": "Failed get permissions"}';
 				exit;
@@ -519,7 +519,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			
 			for($i = 0; $i < 2; $i++)
 			{
-				$permission[0]['allow_'.($i+1)] = ((ord($permission[0]['allow_bits'][(int) ($i / 8)]) >> ($i % 8)) & 0x01)?1:0;
+				$permission[0]['allow_bit_'.($i+1)] = ((ord($permission[0]['allow_bits'][(int) ($i / 8)]) >> ($i % 8)) & 0x01)?1:0;
 			}
 			
 			$result_json = array(
@@ -575,12 +575,12 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			$v_dn = trim(@$_POST['dn']);
 			$v_allow = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
-			if(intval(@$_POST['allow_1']))
+			if(intval(@$_POST['allow_bit_1']))
 			{
 				set_pemission_bit($v_allow, LPD_ACCESS_READ);
 			}
 
-			if(intval(@$_POST['allow_2']))
+			if(intval(@$_POST['allow_bit_2']))
 			{
 				set_pemission_bit($v_allow, LPD_ACCESS_WRITE);
 			}
