@@ -57,6 +57,7 @@ function permissions_to_string($allow_bits)
 			$result[$i] = $g_rights[$i];
 		}
 	}
+	return $result;
 }
 
 function set_permission_bit(&$bits, $bit)
