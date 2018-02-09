@@ -4,7 +4,7 @@
 				<h3>Подождите, идет загрузка...</h3>
 			</div>
 		</div>
-		<?php if($uid) { ?>
+		<?php if(0 && $uid) { ?>
 		<div id="codedby"><small>Coded by Dmitry V. Zimin. Project on <a href="https://github.com/pfzim/light-point-docs">GitHub</a></small></div>
 		<?php } ?>
 	</body>

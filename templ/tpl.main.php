@@ -2,7 +2,7 @@
 <script type="text/javascript">
 	g_pid = <?php eh($id); ?>;
 </script>
-		<h3 align="center">Light Point Docs</h3>
+		<h3 align="center">Портал</h3>
 <div>
 <?php include("tpl.menu.php"); ?>
 	<div style="overflow: hidden;">
@@ -10,14 +10,14 @@
 		<table id="table" class="main-table" width="100%">
 			<thead>
 			<tr>
-				<th width="20%">Нименование</th>
+				<th width="20%"><a href="?id=<?php eh($id); ?>&amp;offset=<?php eh($offset); ?>&amp;sort=1&amp;direction=<?php eh((!$direction && ($sort==1))?1:0); ?>">Наименование</a></th>
 				<th width="10%">Статус</th>
-				<th width="10%">Бизнес юнит</th>
-				<th width="25%">Региональное управление</th>
-				<th width="10%">Региональное отделение</th>
+				<th width="10%"><a href="?id=<?php eh($id); ?>&amp;offset=<?php eh($offset); ?>&amp;sort=2&amp;direction=<?php eh((!$direction && ($sort==2))?1:0); ?>">Бизнес юнит</a></th>
+				<th width="25%"><a href="?id=<?php eh($id); ?>&amp;offset=<?php eh($offset); ?>&amp;sort=3&amp;direction=<?php eh((!$direction && ($sort==3))?1:0); ?>">Региональное управление</a></th>
+				<th width="10%"><a href="?id=<?php eh($id); ?>&amp;offset=<?php eh($offset); ?>&amp;sort=4&amp;direction=<?php eh((!$direction && ($sort==4))?1:0); ?>">Региональное отделение</a></th>
 				<th width="10%">Контрагент</th>
 				<th width="10%">Ордер</th>
-				<th width="10%">Дата ордера</th>
+				<th width="10%"><a href="?id=<?php eh($id); ?>&amp;offset=<?php eh($offset); ?>&amp;sort=5&amp;direction=<?php eh((!$direction && ($sort==5))?1:0); ?>">Дата ордера</a></th>
 				<th width="10%">Тип документа</th>
 				<th width="10%">Операции</th>
 			</tr>
@@ -41,11 +41,15 @@
 		<?php } ?>
 			</tbody>
 		</table>
+		
+		<?php for($i = 0; $i < ($docs_count/50); $i++) { ?>
+		<a class="page-number<?php if($offset == $i) eh(' boldtext'); ?>" href="?id=<?php eh($id); ?>&amp;offset=<?php eh($i); ?>&amp;sort=<?php eh($sort); ?>&amp;direction=<?php eh($direction); ?>"><?php eh($i+1); ?></a>
+		<?php } ?>
 	</div>
 </div>
 		<br />
 		<br />
 <?php
-	include("tpl.form-doc.php"); 
-	include("tpl.footer.php"); 
+	include("tpl.form-doc.php");
+	include("tpl.footer.php");
 ?>

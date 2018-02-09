@@ -113,6 +113,11 @@ body {
 }
 .main-table th {
     text-align: left;
+	border-bottom: 1px solid #DDDDDD;
+}
+.main-table th a {
+    text-decoration: none;
+	color: black;
 }
 .main-table td {
     vertical-align: top;
@@ -317,6 +322,14 @@ body {
 }
 .server-info {
     font-size: 8pt;
+}
+.page-number {
+	margin-top: 10px;
+	margin-bottom: 10px;
+    padding: 10px;
+    display: inline-block;
+    background-color: #DDDDDD;
+	border-radius: 3px;
 }
 .command {
     padding: 1px;

@@ -1,5 +1,5 @@
 <?php include("tpl.header.php"); ?>
-		<h3 align="center">Light Point Docs</h3>
+		<h3 align="center">Документ</h3>
 <div>
 <?php include("tpl.menu.php"); ?>
 	<div style="overflow: hidden;">

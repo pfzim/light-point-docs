@@ -26,8 +26,8 @@ if(!file_exists('inc.config.php'))
 require_once("inc.config.php");
 
 $g_doc_status = array("Undefined", "Создан", "Отфактурован", "На доработку", "Доработан", "Замена документов");
-$g_doc_reg_upr = array("Undefined", "Region 1", "Region 2");
-$g_doc_reg_otd = array("Undefined", "Department 1", "Department 2");
+$g_doc_reg_upr = array("Undefined", "Донское региональное управление", "Уральское региональное управление", "Приволжское региональное управление");
+$g_doc_reg_otd = array("Undefined", "Екатеринбург", "Ростов на Дону", "Ярославль");
 $g_doc_types = array("Торг12", "СФ", "1Т", "Доверенность", "Справка А", "Справка Б",);
 
 function doc_type_to_string($doc_type)
@@ -422,24 +422,21 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				exit;
 			}
 
-			if(!$db->select_ex($files, rpv("SELECT m.`id` FROM `@files` AS m WHERE m.`pid` = # AND m.`deleted` = 0", $id)))
+			if($db->select_ex($files, rpv("SELECT m.`id` FROM `@files` AS m WHERE m.`pid` = # AND m.`deleted` = 0", $id)))
 			{
-				echo '{"code": 1, "message": "Failed delete document. Error #2"}';
-				exit;
-			}
-
-			foreach($files as &$file)
-			{
-				if(!$db->put(rpv("UPDATE `@files` SET `deleted` = 1 WHERE `id` = # LIMIT 1", $file[0])))
+				foreach($files as &$file)
 				{
-					echo '{"code": 1, "message": "Failed delete. Error #3"}';
-					exit;
-				}
+					if(!$db->put(rpv("UPDATE `@files` SET `deleted` = 1 WHERE `id` = # LIMIT 1", $file[0])))
+					{
+						echo '{"code": 1, "message": "Failed delete. Error #2"}';
+						exit;
+					}
 
-				if(!$db->put(rpv("UPDATE `@files_history` SET `deleted` = 1 WHERE `pid` = #", $file[0])))
-				{
-					echo '{"code": 1, "message": "Failed delete. Error #4"}';
-					exit;
+					if(!$db->put(rpv("UPDATE `@files_history` SET `deleted` = 1 WHERE `pid` = #", $file[0])))
+					{
+						echo '{"code": 1, "message": "Failed delete. Error #3"}';
+						exit;
+					}
 				}
 			}
 
@@ -604,7 +601,6 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			if(!$v_id)
 			{
 				$v_name = $v_order_date.$v_name;
-
 				if($db->put(rpv("INSERT INTO `@docs` (`pid`, `uid`, `create_date`, `modify_date`, `name`, `status`, `bis_unit`, `reg_upr`, `reg_otd`, `contr_name`, `order`, `order_date`, `doc_type`, `info`, `deleted`) VALUES (#, #, NOW(), NOW(), !, #, #, #, #, !, !, !, #, !, 0)",
 					$v_pid,
 					$uid,
@@ -686,7 +682,40 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
 			if($id > 0)
 			{
-				$db->select_assoc_ex($docs, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type` FROM `@docs` AS m WHERE m.`pid` = # AND m.`deleted` = 0 ORDER BY m.`modify_date`", $id));
+				if(isset($_GET['offset']))
+				{
+					$offset = intval($_GET['offset']);
+				}
+				else
+				{
+					$offset = 0;
+				}
+
+				$doc_cols = array('modify_date', 'name', 'bis_unit', 'reg_upr', 'reg_otd', 'order_date');
+				if(isset($_GET['sort']) && isset($doc_cols[intval($_GET['sort'])]))
+				{
+					$sort = intval($_GET['sort']);
+					$sort_col = $doc_cols[intval($_GET['sort'])];
+
+					if(isset($_GET['direction']) && intval($_GET['direction']))
+					{
+						$direction = 1;
+					}
+					else
+					{
+						$direction = 0;
+					}
+				}
+				else
+				{
+					$sort = 0;
+					$direction = 1;
+					$sort_col = $doc_cols[0];
+				}
+				
+				$db->select_ex($docs, rpv("SELECT COUNT(*) FROM `@docs` AS m WHERE m.`pid` = # AND m.`deleted` = 0", $id));
+				$docs_count = intval($docs[0][0]);
+				$db->select_assoc_ex($docs, rpv("SELECT m.`id`, m.`pid`, m.`uid`, DATE_FORMAT(m.`create_date`, '%d.%m.%Y') AS create_date, DATE_FORMAT(m.`modify_date`, '%d.%m.%Y') AS modify_date, m.`name`, m.`status`, m.`bis_unit`, m.`reg_upr`, m.`reg_otd`, m.`contr_name`, m.`order`, DATE_FORMAT(m.`order_date`, '%d.%m.%Y') AS order_date, m.`doc_type` FROM `@docs` AS m WHERE m.`pid` = # AND m.`deleted` = 0 ORDER BY m.`?`? LIMIT #,50", $id, $sort_col, $direction?' DESC':'', $offset*50));
 				include('templ/tpl.main.php');
 			}
 			else

@@ -60,3 +60,11 @@
 				</div>
 			</div>
 		</div>
+<script src="moment.js"></script>
+<script src="pikaday.js"></script>
+<script>
+    var picker = new Pikaday({
+        field: document.getElementById('order_date'),
+        format: 'DD.MM.YYYY',
+    });
+</script>
