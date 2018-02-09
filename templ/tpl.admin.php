@@ -28,7 +28,7 @@
 				<td><?php eh($row['dn']); ?></td>
 				<td><?php eh(permissions_to_string($row['allow_bits'])); ?></td>
 				<td>
-					<span class="command" onclick="f_edit(event, 'permission');">Edit</span>
+					<span class="command" onclick="f_edit(<?php eh($row['id']);?>, 'permission');">Edit</span>
 					<span class="command" onclick="f_delete_rights(event);">Delete</span>
 				</td>
 			</tr>
