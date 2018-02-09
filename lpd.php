@@ -494,7 +494,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 			assert_permission_ajax(0, LPD_ACCESS_READ);
 
-			if(!$db->select_assoc_ex($permission, rpv("SELECT m.`oid`, m.`dn`, m.`allow_bits` FROM `@rights` AS m WHERE m.`id` = # LIMIT 1", $id)))
+			if(!$db->select_assoc_ex($permission, rpv("SELECT m.`oid`, m.`dn`, m.`allow_bits` FROM `@access` AS m WHERE m.`id` = # LIMIT 1", $id)))
 			{
 				echo '{"code": 1, "message": "Failed get permissions"}';
 				exit;
@@ -774,7 +774,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			}
 
 			$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
-			$db->select_assoc_ex($permissions, rpv("SELECT m.`id`, m.`oid`, m.`dn`, m.`allow_bits` FROM `@rights` AS m WHERE m.`oid` = # ORDER BY m.`dn`", $id));
+			$db->select_assoc_ex($permissions, rpv("SELECT m.`id`, m.`oid`, m.`dn`, m.`allow_bits` FROM `@access` AS m WHERE m.`oid` = # ORDER BY m.`dn`", $id));
 
 			include('templ/tpl.admin.php');
 		}
