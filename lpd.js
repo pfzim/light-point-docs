@@ -228,7 +228,7 @@ function f_update_doc(data)
 
 	row.id = 'row'+data.id;
 	row.setAttribute("data-id", data.id);
-	row.cells[0].innerHTML = '<a href="?action=doc&id='+escapeHtml(data.id)+'">'+escapeHtml(data.name)+'</a>';
+	row.cells[0].innerHTML = '<a href="?action=doc&id='+escapeHtml(''+data.id)+'">'+escapeHtml(data.name)+'</a>';
 	row.cells[1].textContent = data.status;
 	row.cells[2].textContent = data.bis_unit;
 	row.cells[3].textContent = data.reg_upr;
