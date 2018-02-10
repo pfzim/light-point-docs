@@ -12,7 +12,7 @@
 		<?php } ?>
 		</ul>
 	</div>
-	<div>
+	<div class="content-box">
 		<span class="command" onclick="f_edit(null, 'permission');">Add permission group</span>
 		<table id="table" class="main-table" width="100%">
 			<thead>
