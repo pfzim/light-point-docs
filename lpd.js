@@ -254,7 +254,7 @@ function f_update_file(data)
 		
 		row.id = 'row'+data.id;
 		row.setAttribute("data-id", data.id);
-		row.cells[3].innerHTML = '<span class="command" onclick="f_delete_file(event);">Удалить</span>span class="command" onclick="f_replace_file(event);">Заменить</span>';
+		row.cells[3].innerHTML = '<span class="command" onclick="f_delete_file(event);">Удалить</span><span class="command" onclick="f_replace_file(event);">Заменить</span>';
 	}
 
 	row.cells[0].innerHTML = '<a href="?action=download&id='+escapeHtml(''+data.id)+'">'+escapeHtml(data.name)+'</a>';
@@ -424,9 +424,9 @@ function f_upload()
 			f_notify(data.message, data.code?"error":"success");
 			if(!data.code)
 			{
-				for(var file in data.files)
+				for(var i = 0; i < data.count; i++)
 				{
-					f_update_file(file);
+					f_update_file(data.files[i]);
 				}
 				//window.location = window.location;
 			}
