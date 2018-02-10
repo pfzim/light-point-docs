@@ -30,7 +30,7 @@
 				<td class="mono"><?php eh(permissions_to_string($row['allow_bits'])); ?></td>
 				<td>
 					<span class="command" onclick="f_edit(<?php eh($row['id']);?>, 'permission');">Edit</span>
-					<span class="command" onclick="f_delete_permission(event);">Delete</span>
+					<span class="command" onclick="f_delete_perm(event);">Delete</span>
 				</td>
 			</tr>
 		<?php } ?>

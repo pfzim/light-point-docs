@@ -128,7 +128,7 @@ function f_delete(ev, action)
 
 function f_delete_doc(ev)
 {
-	f_delete(ev, 'delete_doc');
+	f_delete(ev, 'delete_document');
 }
 
 function f_delete_file(ev)
@@ -136,7 +136,7 @@ function f_delete_file(ev)
 	f_delete(ev, 'delete_file');
 }
 
-function f_delete_permission(ev)
+function f_delete_perm(ev)
 {
 	f_delete(ev, 'delete_permission');
 }

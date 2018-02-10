@@ -429,6 +429,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 			assert_permission_ajax($file[0][0], LPD_ACCESS_WRITE);
 
+			$db->start_transaction();
+			
 			if(!$db->put(rpv("UPDATE `@files` SET `deleted` = 1 WHERE `id` = # LIMIT 1", $id)))
 			{
 				echo '{"code": 1, "message": "Failed delete"}';
@@ -440,12 +442,14 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				echo '{"code": 1, "message": "Failed delete"}';
 				exit;
 			}
+			
+			$db->commit();
 
 			echo '{"code": 0, "id": '.$id.', "message": "File deleted"}';
 		}
 		exit;
 
-		case 'delete_doc':
+		case 'delete_document':
 		{
 			if(!$db->select_ex($doc, rpv("SELECT m.`pid` FROM `@docs` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $id)))
 			{
