@@ -6,7 +6,7 @@
 <div>
 <?php include("tpl.menu.php"); ?>
 	<div class="content-box">
-		<span class="command" onclick="f_edit(null, 'form1');">Создать документ</span>
+		<span class="command" onclick="f_edit(null, 'document');">Создать документ</span>
 		<table id="table" class="main-table" width="100%">
 			<thead>
 			<tr>
