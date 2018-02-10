@@ -405,6 +405,20 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		}
 		exit;
 
+		case 'delete_permission':
+		{
+			assert_permission_ajax(0, LPD_ACCESS_WRITE);
+
+			if(!$db->put(rpv("DELETE FROM `@access` WHERE `id` = # LIMIT 1", $id)))
+			{
+				echo '{"code": 1, "message": "Failed delete"}';
+				exit;
+			}
+
+			echo '{"code": 0, "id": '.$id.', "message": "Permission deleted"}';
+		}
+		exit;
+
 		case 'delete_file':
 		{
 			if(!$db->select_ex($file, rpv("SELECT j1.`pid` FROM `@files` AS m LEFT JOIN `@docs` AS j1 ON j1.`id` = m.`pid` WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $id)))
@@ -709,7 +723,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			if(!datecheck($nd, $nm, $ny))
 			{
 				$result_json['code'] = 1;
-				$result_json['errors'][] = array('name' => 'order_date', 'msg' => 'Укажите правильную дату ордера!');
+				$result_json['errors'][] = array('name' => 'order_date', 'msg' => 'Укажите дату ордера в формате ДД.ММ.ГГГГ!');
 			}
 
 			if(!($v_doc_type & 0x3F))

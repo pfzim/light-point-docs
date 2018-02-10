@@ -146,6 +146,26 @@ function f_delete_file(ev)
 	);
 };
 
+function f_delete_permission(ev)
+{
+	gi('loading').style.display = 'block';
+	var el_src = ev.target || ev.srcElement;
+	var id = el_src.parentNode.parentNode.getAttribute('data-id');
+	f_http("lpd.php?"+json2url({'action': 'delete_permission', 'id': id }),
+		function(data, el)
+		{
+			gi('loading').style.display = 'none';
+			f_notify(data.message, data.code?"error":"success");
+			if(!data.code)
+			{
+				var row = el.parentNode.parentNode;
+				row.parentNode.removeChild(row);
+			}
+		},
+		el_src
+	);
+};
+
 function f_save(form_id)
 {
 	var form_data = {};
