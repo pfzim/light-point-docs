@@ -29,7 +29,6 @@ $g_doc_status = array("Undefined", "Создан", "Отфактурован", "
 $g_doc_reg_upr = array("Undefined", "Донское региональное управление", "Уральское региональное управление", "Приволжское региональное управление");
 $g_doc_reg_otd = array("Undefined", "Екатеринбург", "Ростов на Дону", "Ярославль");
 $g_doc_types = array("Торг12", "СФ", "1Т", "Доверенность", "Справка А", "Справка Б",);
-$g_rights = 'rw';
 
 function doc_type_to_string($doc_type)
 {
@@ -79,8 +78,8 @@ function assert_permission_ajax($section_id, $allow_bit)
 
 	if(!$user_perm->check_permission($section_id, $allow_bit))
 	{
-		//echo '{"code": 1, "message": "Access denied to section '.$section_id.' for user '.$uid.'!"}';
-		//exit;
+		echo '{"code": 1, "message": "Access denied to section '.$section_id.' for user '.$uid.'!"}';
+		exit;
 	}
 }
 
@@ -347,6 +346,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				'files' => array(
 				)
 			);
+			$date_now = date('d.m.Y');
 
 			$files_dir = dirname(__FILE__).DIRECTORY_SEPARATOR.'files'.DIRECTORY_SEPARATOR;
 			
@@ -391,8 +391,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				$result_json['files'][] = array(
 					'id' => $v_id,
 					'name' => @$_FILES['file']['name'][0],
-					'create_date' => date('d.m.Y'),
-					'modify_date' => date('d.m.Y')
+					'create_date' => $date_now,
+					'modify_date' => $date_now
 				);
 			}
 			else
@@ -417,8 +417,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 					$result_json['files'][] = array(
 						'id' => $v_id,
 						'name' => @$_FILES['file']['name'][$i],
-						'create_date' => date('d.m.Y'),
-						'modify_date' => date('d.m.Y')
+						'create_date' => $date_now,
+						'modify_date' => $date_now
 					);
 				}
 			}
@@ -523,8 +523,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				if(!$user_perm->check_permission($file[0][1], LPD_ACCESS_READ))
 				{
 					$error_msg = "Access denied to section ".$file[0][1]." for user ".$uid."!";
-					//include('templ/tpl.message.php');
-					//exit;
+					include('templ/tpl.message.php');
+					exit;
 				}
 
 				$db->disconnect(); // release database connection
@@ -849,8 +849,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			if(!$user_perm->check_permission(0, LPD_ACCESS_READ))
 			{
 				$error_msg = "Access denied to section ".$doc[0]['pid']." for user ".$uid."!";
-				//include('templ/tpl.message.php');
-				//exit;
+				include('templ/tpl.message.php');
+				exit;
 			}
 
 			$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
@@ -869,8 +869,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			if(!$user_perm->check_permission($doc[0]['pid'], LPD_ACCESS_READ))
 			{
 				$error_msg = "Access denied to section ".$doc[0]['pid']." for user ".$uid."!";
-				//include('templ/tpl.message.php');
-				//exit;
+				include('templ/tpl.message.php');
+				exit;
 			}
 
 			$db->select_ex($sections, rpv("SELECT m.`id`, m.`name` FROM `@sections` AS m WHERE m.`deleted` = 0 AND m.`pid` = 0 ORDER BY m.`priority`, m.`name`"));
@@ -885,8 +885,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			if(!$user_perm->check_permission($id, LPD_ACCESS_READ))
 			{
 				$error_msg = "Access denied to section ".$id." for user ".$uid."!";
-				//include('templ/tpl.message.php');
-				//exit;
+				include('templ/tpl.message.php');
+				exit;
 			}
 
 			header("Content-Type: text/html; charset=utf-8");
