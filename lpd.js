@@ -187,8 +187,8 @@ function f_save(form_id)
 			if(!data.code)
 			{
 				gi(params+'-container').style.display='none';
-				//f_update_row(data.id);
-				window.location = window.location;
+				f_update_doc(data.data);
+				//window.location = window.location;
 			}
 			else if(data.errors)
 			{
@@ -209,7 +209,37 @@ function f_save(form_id)
 	);
 }
 
-function f_update_row(id)
+function f_update_doc(data)
+{
+	var row = gi('row'+data.id);
+	if(!row)
+	{
+		row = gi("table-data").insertRow(0);
+		row.insertCell(0);
+		row.insertCell(1);
+		row.insertCell(2);
+		row.insertCell(3);
+		row.insertCell(4);
+		row.insertCell(5);
+		row.insertCell(6);
+		row.insertCell(7);
+		row.insertCell(8);
+	}
+
+	row.id = 'row'+data.id;
+	row.setAttribute("data-id", data.id);
+	row.cells[0].innerHTML = '<a href="?action=doc&id='+escapeHtml(data.id)+'">'+escapeHtml(data.name)+'</a>';
+	row.cells[1].textContent = data.status;
+	row.cells[2].textContent = data.bis_unit;
+	row.cells[3].textContent = data.reg_upr;
+	row.cells[4].textContent = data.reg_otd;
+	row.cells[5].textContent = data.contr_name;
+	row.cells[6].textContent = data.order;
+	row.cells[7].textContent = data.order_date;
+	row.cells[8].innerHTML = '<span class="command" onclick="f_delete_doc(event);">Удалить</span>';
+}
+
+function f_update_row_old(id)
 {
 	f_http("pb.php?"+json2url({'action': 'get', 'id': id }),
 		function(data, params)

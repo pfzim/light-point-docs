@@ -723,6 +723,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			$nm = intval(@$d[1]);
 			$ny = intval(@$d[2]);
 			$v_order_date = sprintf("%04d-%02d-%02d", $ny, $nm, $nd);
+			$v_order_date_human = sprintf("%02d.%02d.%04d", $nd, $nm, $ny);
 
 			if(!datecheck($nd, $nm, $ny))
 			{
@@ -746,7 +747,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			if(!$v_id)
 			{
 				$v_name = $v_order_date.$v_name;
-				if($db->put(rpv("INSERT INTO `@docs` (`pid`, `uid`, `create_date`, `modify_date`, `name`, `status`, `bis_unit`, `reg_upr`, `reg_otd`, `contr_name`, `order`, `order_date`, `doc_type`, `info`, `deleted`) VALUES (#, #, NOW(), NOW(), !, #, #, #, #, !, !, !, #, !, 0)",
+				if(!$db->put(rpv("INSERT INTO `@docs` (`pid`, `uid`, `create_date`, `modify_date`, `name`, `status`, `bis_unit`, `reg_upr`, `reg_otd`, `contr_name`, `order`, `order_date`, `doc_type`, `info`, `deleted`) VALUES (#, #, NOW(), NOW(), !, #, #, #, #, !, !, !, #, !, 0)",
 					$v_pid,
 					$uid,
 					$v_name,
@@ -761,14 +762,15 @@ function php_mailer($to, $name, $subject, $html, $plain)
 					$v_info
 				)))
 				{
-					$id = $db->last_id();
-					echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
+					//echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
+					echo '{"code": 1, "id": '.$id.',"message": "Error: '.json_escape($db->get_last_error()).'"}';
 					exit;
 				}
+				$id = $db->last_id();
 			}
 			else
 			{
-				if($db->put(rpv("UPDATE `@docs` SET `uid` = #, `modify_date` = NOW(), `status` = #, `bis_unit` = !, `reg_upr` = #, `reg_otd` = #, `contr_name` = !, `order` = !, `order_date` = !, `doc_type` = #, `info` = ! WHERE `id` = # AND `pid` = # LIMIT 1",
+				if(!$db->put(rpv("UPDATE `@docs` SET `uid` = #, `modify_date` = NOW(), `status` = #, `bis_unit` = !, `reg_upr` = #, `reg_otd` = #, `contr_name` = !, `order` = !, `order_date` = !, `doc_type` = #, `info` = ! WHERE `id` = # AND `pid` = # LIMIT 1",
 					$uid,
 					//$v_name, , `name` = !
 					$v_status,
@@ -784,12 +786,32 @@ function php_mailer($to, $name, $subject, $html, $plain)
 					$v_pid
 				)))
 				{
-					echo '{"code": 0, "id": '.$id.',"message": "Updated (ID '.$id.')"}';
+					//echo '{"code": 0, "id": '.$id.',"message": "Updated (ID '.$id.')"}';
+					echo '{"code": 1, "id": '.$id.',"message": "Error: '.json_escape($db->get_last_error()).'"}';
 					exit;
 				}
 			}
 
-			echo '{"code": 1, "id": '.$id.',"message": "Error: '.json_escape($db->get_last_error()).'"}';
+			$result_json = array(
+				'code' => 0,
+				'id' => $id,
+				'message' => 'Added (ID '.$id.')',
+				'data' => array(
+					'id' => $id,
+					'name' => $v_name,
+					'status' => $g_doc_status[$v_status],
+					'bis_unit' => $v_bis_unit,
+					'reg_upr' => $g_doc_reg_upr[$v_reg_upr],
+					'reg_otd' => $g_doc_reg_otd[$v_reg_otd],
+					'contr_name' => $v_contr_name,
+					'order' => $v_order,
+					'order_date' => $v_order_date_human,
+					'doc_type' => doc_type_to_string($v_doc_type),
+					'info' => $v_info
+				)
+			);
+
+			echo json_encode($result_json);
 		}
 		exit;
 
