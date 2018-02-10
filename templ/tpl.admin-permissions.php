@@ -17,9 +17,10 @@
 		<table id="table" class="main-table" width="100%">
 			<thead>
 			<tr>
-				<th width="20%">ID</th>
-				<th width="10%">DN</th>
-				<th width="10%">Access</th>
+				<th width="5%">ID</th>
+				<th width="55%">DN</th>
+				<th width="20%">Access</th>
+				<th width="20%">Operations</th>
 			</tr>
 			</thead>
 			<tbody id="table-data">
