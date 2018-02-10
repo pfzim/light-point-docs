@@ -174,7 +174,7 @@ function f_save(form_id)
 			}
 		}
 	}
-	
+
 	//alert(json2url(form_data));
 	//return;
 
@@ -187,8 +187,8 @@ function f_save(form_id)
 			if(!data.code)
 			{
 				gi(params+'-container').style.display='none';
-				f_update_doc(data.data);
-				//window.location = window.location;
+				window.location = '?action=doc&id='+data.id;
+				//f_update_doc(data.data);
 			}
 			else if(data.errors)
 			{
