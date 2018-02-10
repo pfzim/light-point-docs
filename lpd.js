@@ -106,12 +106,12 @@ function f_http(url, _f_callback, _callback_params, content_type, data)
 	return true;
 }
 
-function f_delete_doc(ev)
+function f_delete(ev, action)
 {
 	gi('loading').style.display = 'block';
 	var el_src = ev.target || ev.srcElement;
 	var id = el_src.parentNode.parentNode.getAttribute('data-id');
-	f_http("lpd.php?"+json2url({'action': 'delete_doc', 'id': id }),
+	f_http("lpd.php?"+json2url({'action': action, 'id': id }),
 		function(data, el)
 		{
 			gi('loading').style.display = 'none';
@@ -124,47 +124,22 @@ function f_delete_doc(ev)
 		},
 		el_src
 	);
-};
+}
+
+function f_delete_doc(ev)
+{
+	f_delete(ev, 'delete_doc');
+}
 
 function f_delete_file(ev)
 {
-	gi('loading').style.display = 'block';
-	var el_src = ev.target || ev.srcElement;
-	var id = el_src.parentNode.parentNode.getAttribute('data-id');
-	f_http("lpd.php?"+json2url({'action': 'delete_file', 'id': id }),
-		function(data, el)
-		{
-			gi('loading').style.display = 'none';
-			f_notify(data.message, data.code?"error":"success");
-			if(!data.code)
-			{
-				var row = el.parentNode.parentNode;
-				row.parentNode.removeChild(row);
-			}
-		},
-		el_src
-	);
-};
+	f_delete(ev, 'delete_file');
+}
 
 function f_delete_permission(ev)
 {
-	gi('loading').style.display = 'block';
-	var el_src = ev.target || ev.srcElement;
-	var id = el_src.parentNode.parentNode.getAttribute('data-id');
-	f_http("lpd.php?"+json2url({'action': 'delete_permission', 'id': id }),
-		function(data, el)
-		{
-			gi('loading').style.display = 'none';
-			f_notify(data.message, data.code?"error":"success");
-			if(!data.code)
-			{
-				var row = el.parentNode.parentNode;
-				row.parentNode.removeChild(row);
-			}
-		},
-		el_src
-	);
-};
+	f_delete(ev, 'delete_permission');
+}
 
 function f_save(form_id)
 {
