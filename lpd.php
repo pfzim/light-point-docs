@@ -339,6 +339,14 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			}
 
 			assert_permission_ajax($doc[0][0], LPD_ACCESS_WRITE);
+			
+			$result_json = array(
+				'code' => 0,
+				'message' => 'Files added',
+				'count' => 0,
+				'files' => array(
+				)
+			);
 
 			$files_dir = dirname(__FILE__).DIRECTORY_SEPARATOR.'files'.DIRECTORY_SEPARATOR;
 			
@@ -378,6 +386,14 @@ function php_mailer($to, $name, $subject, $html, $plain)
 					echo '{"code": 1, "message": "Failed upload. Error #4"}';
 					exit;
 				}
+				
+				$result_json['count']++;
+				$result_json['files'][] = array(
+					'id' => $v_id,
+					'name' => @$_FILES['file']['name'][0],
+					'create_date' => '',
+					'modify_date' => ''
+				);
 			}
 			else
 			{
@@ -396,12 +412,21 @@ function php_mailer($to, $name, $subject, $html, $plain)
 						echo '{"code": 1, "message": "Failed upload. Error #6"}';
 						exit;
 					}
+					
+					$result_json['count']++;
+					$result_json['files'][] = array(
+						'id' => $v_id,
+						'name' => @$_FILES['file']['name'][$i],
+						'create_date' => '',
+						'modify_date' => ''
+					);
 				}
 			}
 
 			$db->commit();
 
-			echo '{"code": 0, "message": "Files added"}';
+			//echo '{"code": 0, "message": "Files added"}';
+			echo json_encode($result_json);
 		}
 		exit;
 

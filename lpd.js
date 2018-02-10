@@ -241,6 +241,27 @@ function f_update_doc(data)
 	row.cells[9].innerHTML = '<span class="command" onclick="f_delete_doc(event);">Удалить</span>';
 }
 
+function f_update_file(data)
+{
+	var row = gi('row'+data.id);
+	if(!row)
+	{
+		row = gi("table-data").insertRow(0);
+		row.insertCell(0);
+		row.insertCell(1);
+		row.insertCell(2);
+		row.insertCell(3);
+		
+		row.id = 'row'+data.id;
+		row.setAttribute("data-id", data.id);
+		row.cells[3].innerHTML = '<span class="command" onclick="f_delete_doc(event);">Удалить</span>';
+	}
+
+	row.cells[0].innerHTML = '<a href="?action=doc&id='+escapeHtml(''+data.id)+'">'+escapeHtml(data.name)+'</a>';
+	row.cells[1].textContent = data.create_date;
+	row.cells[2].textContent = data.modify_date;
+}
+
 function f_update_row_old(id)
 {
 	f_http("pb.php?"+json2url({'action': 'get', 'id': id }),
@@ -403,8 +424,11 @@ function f_upload()
 			f_notify(data.message, data.code?"error":"success");
 			if(!data.code)
 			{
-				//f_update_row(data.id);
-				window.location = window.location;
+				for(var file in data.files)
+				{
+					f_update_file(file);
+				}
+				//window.location = window.location;
 			}
 		},
 		null,
