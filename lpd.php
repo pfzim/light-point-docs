@@ -391,8 +391,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				$result_json['files'][] = array(
 					'id' => $v_id,
 					'name' => @$_FILES['file']['name'][0],
-					'create_date' => '00.00.0000',
-					'modify_date' => '00.00.0000'
+					'create_date' => date('d.m.Y'),
+					'modify_date' => date('d.m.Y')
 				);
 			}
 			else
@@ -417,8 +417,8 @@ function php_mailer($to, $name, $subject, $html, $plain)
 					$result_json['files'][] = array(
 						'id' => $v_id,
 						'name' => @$_FILES['file']['name'][$i],
-						'create_date' => '00.00.0000',
-						'modify_date' => '00.00.0000'
+						'create_date' => date('d.m.Y'),
+						'modify_date' => date('d.m.Y')
 					);
 				}
 			}

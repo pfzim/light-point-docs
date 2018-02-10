@@ -254,11 +254,11 @@ function f_update_file(data)
 		
 		row.id = 'row'+data.id;
 		row.setAttribute("data-id", data.id);
-		row.cells[3].innerHTML = '<span class="command" onclick="f_delete_file(event);">Удалить</span><span class="command" onclick="f_replace_file(event);">Заменить</span>';
+		row.cells[1].textContent = data.create_date;
+		row.cells[3].innerHTML = '<span class="command" onclick="f_delete_file(event);">Удалить</span> <span class="command" onclick="f_replace_file(event);">Заменить</span>';
 	}
 
 	row.cells[0].innerHTML = '<a href="?action=download&id='+escapeHtml(''+data.id)+'">'+escapeHtml(data.name)+'</a>';
-	row.cells[1].textContent = data.create_date;
 	row.cells[2].textContent = data.modify_date;
 }
 
