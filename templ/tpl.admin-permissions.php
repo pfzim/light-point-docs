@@ -6,6 +6,7 @@
 <div>
 	<div class="left-menu">
 		<ul>
+		<li<?php if($id == 0) { echo ' class="active"'; } ?>><a href="?action=permissions&amp;id=0">Top level</a></li>
 		<?php $i = 0; foreach($sections as &$row) { $i++; ?>
 		<li<?php if($id == $row[0]) { echo ' class="active"'; } ?>><a href="?action=permissions&amp;id=<?php eh($row[0]); ?>"><?php eh($row[1]); ?></a></li>
 		<?php } ?>
@@ -26,7 +27,7 @@
 			<tr id="<?php eh("row".$row['id']); ?>" data-id=<?php eh($row['id']);?>>
 				<td><?php eh($row['id']); ?></td>
 				<td><?php eh($row['dn']); ?></td>
-				<td><?php eh(permissions_to_string($row['allow_bits'])); ?></td>
+				<td class="mono"><?php eh(permissions_to_string($row['allow_bits'])); ?></td>
 				<td>
 					<span class="command" onclick="f_edit(<?php eh($row['id']);?>, 'permission');">Edit</span>
 					<span class="command" onclick="f_delete_rights(event);">Delete</span>

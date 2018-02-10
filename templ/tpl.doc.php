@@ -2,7 +2,7 @@
 		<h3 align="center">Документ</h3>
 <div>
 <?php include("tpl.menu.php"); ?>
-	<div>
+	<div class="content-box">
 		<div class="doc-info">
 		<table>
 			<tbody>

@@ -5,7 +5,7 @@
 		<h3 align="center">Портал</h3>
 <div>
 <?php include("tpl.menu.php"); ?>
-	<div>
+	<div class="content-box">
 		<span class="command" onclick="f_edit(null, 'form1');">Создать документ</span>
 		<table id="table" class="main-table" width="100%">
 			<thead>

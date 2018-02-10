@@ -342,11 +342,17 @@ body {
     text-decoration-style: dashed;
     background-color: #FAFAFA;
 }
+.mono {
+    font-family: Courier, monospace, fixed;
+}
 .boldtext {
     font-weight: bold;
 }
 .userwithphoto {
     color: blue;
+}
+.content-box {
+	overflow: hidden;
 }
 .modal-container {
     position: fixed;
