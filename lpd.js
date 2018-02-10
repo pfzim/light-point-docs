@@ -224,6 +224,7 @@ function f_update_doc(data)
 		row.insertCell(6);
 		row.insertCell(7);
 		row.insertCell(8);
+		row.insertCell(9);
 	}
 
 	row.id = 'row'+data.id;
@@ -236,7 +237,8 @@ function f_update_doc(data)
 	row.cells[5].textContent = data.contr_name;
 	row.cells[6].textContent = data.order;
 	row.cells[7].textContent = data.order_date;
-	row.cells[8].innerHTML = '<span class="command" onclick="f_delete_doc(event);">Удалить</span>';
+	row.cells[8].textContent = data.doc_type;
+	row.cells[9].innerHTML = '<span class="command" onclick="f_delete_doc(event);">Удалить</span>';
 }
 
 function f_update_row_old(id)
