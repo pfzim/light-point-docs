@@ -7,7 +7,7 @@ function gi(name)
 
 function escapeHtml(text)
 {
-  return text
+  return (text+'')
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -209,7 +209,7 @@ function f_save(form_id)
 	);
 }
 
-function f_update_doc(data)
+function f_update_doc_row(data)
 {
 	var row = gi('row'+data.id);
 	if(!row)
@@ -241,7 +241,20 @@ function f_update_doc(data)
 	row.cells[9].innerHTML = '<span class="command" onclick="f_delete_doc(event);">Удалить</span>';
 }
 
-function f_update_file(data)
+function f_update_doc_info(data)
+{
+	Object.keys(data).map(
+		function (key) {
+			var el = gi('doc-'+key);
+			if(el)
+			{
+				el.textContent = data[key];
+			}
+		}
+	);
+}
+
+function f_update_file_row(data)
 {
 	var row = gi('row'+data.id);
 	if(!row)
@@ -251,7 +264,7 @@ function f_update_file(data)
 		row.insertCell(1);
 		row.insertCell(2);
 		row.insertCell(3);
-		
+
 		row.id = 'row'+data.id;
 		row.setAttribute("data-id", data.id);
 		row.cells[1].textContent = data.create_date;
@@ -260,75 +273,6 @@ function f_update_file(data)
 
 	row.cells[0].innerHTML = '<a href="?action=download&id='+escapeHtml(''+data.id)+'">'+escapeHtml(data.name)+'</a>';
 	row.cells[2].textContent = data.modify_date;
-}
-
-function f_update_row_old(id)
-{
-	f_http("pb.php?"+json2url({'action': 'get', 'id': id }),
-		function(data, params)
-		{
-			if(data.code)
-			{
-				f_notify(data.message, "error");
-			}
-			else
-			{
-				var row = gi('row'+data.id);
-				if(!row)
-				{
-					row = gi("table-data").insertRow(0);
-					row.insertCell(0);
-					row.insertCell(1);
-					row.insertCell(2);
-					row.insertCell(3);
-					row.insertCell(4);
-					row.insertCell(5);
-					row.insertCell(6);
-					row.insertCell(7);
-				}
-
-				row.id = 'row'+data.id;
-				row.setAttribute("data-id", data.id);
-				row.setAttribute("data-map", data.map);
-				row.setAttribute("data-x", data.x);
-				row.setAttribute("data-y", data.y);
-				row.setAttribute("data-photo", data.photo);
-				row.cells[0].textContent = '';
-				row.cells[1].textContent = data.firstname + ' ' + data.lastname;
-				if(data.photo)
-				{
-					row.cells[1].className = 'userwithphoto';
-				}
-				row.cells[1].style.cursor = 'pointer';
-				row.cells[1].onclick = function(event) { f_sw_map(event); };
-				row.cells[1].onmouseenter = function(event) { f_sw_img(event); };
-				row.cells[1].onmouseleave = function(event) { gi('imgblock').style.display = 'none'; };
-				row.cells[1].onmousemove = function(event) { f_mv_img(event); };
-
-				row.cells[2].textContent = data.phone;
-				row.cells[3].textContent = data.mobile;
-				row.cells[4].innerHTML = '<a href="mailto:'+escapeHtml(data.mail)+'">'+escapeHtml(data.mail)+'</a>';
-				row.cells[5].textContent = data.position;
-				row.cells[6].textContent = data.department;
-
-				var str = '<span class="command" onclick="f_edit(event);">Edit</span> <span class="command" onclick="f_delete(event);">Delete</span> <span class="command" onclick="f_photo(event);">Photo</span> <span class="command" data-map="1" onclick="f_map_set(event);">Map&nbsp;1</span>';
-				for(i = 2; i <= map_count; i++)
-				{
-					str += ' <span class="command" data-map="'+i+'" onclick="f_map_set(event);">'+i+'</span>';
-				}
-
-				if(data.visible)
-				{
-					row.cells[7].innerHTML = str+' <span class="command" onclick="f_hide(event);">Hide</span>';
-				}
-				else
-				{
-					row.cells[7].innerHTML = str+' <span class="command" onclick="f_show(event);">Show</span>';
-				}
-				//row.cells[7].onclick = function(event) { h(event); };
-			}
-		}
-	);
 }
 
 function f_edit(ev, form_id)
@@ -426,7 +370,7 @@ function f_upload()
 			{
 				for(var i = 0; i < data.count; i++)
 				{
-					f_update_file(data.files[i]);
+					f_update_file_row(data.files[i]);
 				}
 				//window.location = window.location;
 			}

@@ -49,7 +49,7 @@ function permissions_to_string($allow_bits)
 {
 	global $g_rights;
 	$result = '---------';
-	for($i = 0; $i < strlen($g_rights); $i++)
+	for($i = 0; $i < LPD_ACCESS_LAST_BIT; $i++)
 	{
 		if((ord($allow_bits[(int) ($i / 8)]) >> ($i % 8)) & 0x01)
 		{
@@ -360,13 +360,13 @@ function php_mailer($to, $name, $subject, $html, $plain)
 					exit;
 				}
 
-				if(!$db->select_ex($file, rpv("SELECT m.`name`, m.`modify_date`, m.`uid` FROM `@files` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $v_id)))
+				if(!$db->select_ex($file, rpv("SELECT m.`name`, m.`create_date`, m.`modify_date`, m.`uid` FROM `@files` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $v_id)))
 				{
 					echo '{"code": 1, "message": "Failed upload. Error #1"}';
 					exit;
 				}
 
-				if(!$db->put(rpv("INSERT INTO `@files_history` (`pid`, `name`, `modify_date`, `uid`, `deleted`) VALUES (#, !, !, #, 0)", $v_id, $file[0][0], $file[0][1], $file[0][2])))
+				if(!$db->put(rpv("INSERT INTO `@files_history` (`pid`, `name`, `modify_date`, `uid`, `deleted`) VALUES (#, !, !, #, 0)", $v_id, $file[0][0], $file[0][2], $file[0][3])))
 				{
 					echo '{"code": 1, "message": "Failed upload. Error #2"}';
 					exit;
@@ -391,7 +391,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 				$result_json['files'][] = array(
 					'id' => $v_id,
 					'name' => @$_FILES['file']['name'][0],
-					'create_date' => $date_now,
+					'create_date' => $file[0][1],
 					'modify_date' => $date_now
 				);
 			}

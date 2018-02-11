@@ -7,34 +7,34 @@
 		<table>
 			<tbody>
 			<tr>
-				<td>Наименование:</td><td><?php eh($doc[0]['name']); ?></td>
+				<td>Наименование:</td><td id='doc-name'><?php eh($doc[0]['name']); ?></td>
 			</tr>
 			<tr>
-				<td>Статус:</td><td><?php eh($g_doc_status[intval($doc[0]['status'])]); ?></td>
+				<td>Статус:</td><td id='doc-status'><?php eh($g_doc_status[intval($doc[0]['status'])]); ?></td>
 			</tr>
 			<tr>
-				<td>Бизнес юнит:</td><td><?php eh($doc[0]['bis_unit']); ?></td>
+				<td>Бизнес юнит:</td><td id='doc-bis_unit'><?php eh($doc[0]['bis_unit']); ?></td>
 			</tr>
 			<tr>
-				<td>Региональное управление:</td><td><?php eh($g_doc_reg_upr[intval($doc[0]['reg_upr'])]); ?></td>
+				<td>Региональное управление:</td><td id='doc-reg_upr'><?php eh($g_doc_reg_upr[intval($doc[0]['reg_upr'])]); ?></td>
 			</tr>
 			<tr>
-				<td>Региональное отделение:</td><td><?php eh($g_doc_reg_otd[intval($doc[0]['reg_otd'])]); ?></td>
+				<td>Региональное отделение:</td><td id='doc-reg_otd'><?php eh($g_doc_reg_otd[intval($doc[0]['reg_otd'])]); ?></td>
 			</tr>
 			<tr>
-				<td>Контрагент:</td><td><?php eh($doc[0]['contr_name']); ?></td>
+				<td>Контрагент:</td><td id='doc-contr'><?php eh($doc[0]['contr_name']); ?></td>
 			</tr>
 			<tr>
-				<td>Ордер:</td><td><?php eh($doc[0]['order']); ?></td>
+				<td>Ордер:</td><td id='doc-order'><?php eh($doc[0]['order']); ?></td>
 			</tr>
 			<tr>
-				<td>Дата ордера:</td><td><?php eh($doc[0]['order_date']); ?></td>
+				<td>Дата ордера:</td><td id='doc-order_date'><?php eh($doc[0]['order_date']); ?></td>
 			</tr>
 			<tr>
-				<td>Тип документа:</td><td><?php eh(doc_type_to_string(intval($doc[0]['doc_type']))); ?></td>
+				<td>Тип документа:</td><td id='doc-doc_type'><?php eh(doc_type_to_string(intval($doc[0]['doc_type']))); ?></td>
 			</tr>
 			<tr>
-				<td>Описание:</td><td><?php eh($doc[0]['info']); ?></td>
+				<td>Описание:</td><td id='doc-info'><?php eh($doc[0]['info']); ?></td>
 			</tr>
 			</tbody>
 		</table>

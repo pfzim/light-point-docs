@@ -57,7 +57,7 @@ class UserPermissions
 					$records = ldap_get_entries($link, $sr);
 					if($records && ($records['count'] == 1))
 					{
-						for($i = 0; $i < LPD_ACCESS_LAST_BIT; $i++)
+						for($i = 0; $i <= ((int) (LPD_ACCESS_LAST_BIT / 8)); $i++)
 						{
 							$this->rights[$object_id][$i] = chr(ord($this->rights[$object_id][$i]) | ord($row[1][$i]));
 						}

@@ -5,8 +5,8 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<title>Light Point Docs</title>
-		<link type="text/css" href="templ/style.css" rel="stylesheet" />
 		<link type="text/css" href="templ/pikaday.css" rel="stylesheet" />
+		<link type="text/css" href="templ/style.css" rel="stylesheet" />
 		<?php if($uid) { ?>
 		<script src="lpd.js"></script>
 		<?php } ?>
