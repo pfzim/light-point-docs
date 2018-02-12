@@ -187,7 +187,8 @@ function f_save(form_id)
 			if(!data.code)
 			{
 				gi(params+'-container').style.display='none';
-				window.location = '?action=doc&id='+data.id;
+				//window.location = '?action=doc&id='+data.id;
+				window.location = window.location;
 				//f_update_doc(data.data);
 			}
 			else if(data.errors)
