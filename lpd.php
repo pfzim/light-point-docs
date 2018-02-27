@@ -848,7 +848,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 			if(!$user_perm->check_permission(0, LPD_ACCESS_READ))
 			{
-				$error_msg = "Access denied to section ".$doc[0]['pid']." for user ".$uid."!";
+				$error_msg = "Access denied to section 0 for user ".$uid."!";
 				include('templ/tpl.message.php');
 				exit;
 			}
