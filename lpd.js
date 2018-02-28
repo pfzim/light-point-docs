@@ -357,10 +357,22 @@ function f_edit(ev, form_id)
 	}
 }
 
-function f_upload()
+function f_files_selected()
+{
+	return f_upload(gi('upload').files);
+}
+
+function f_upload(files)
 {
 	gi('loading').style.display = 'block';
-	var fd = new FormData(gi("file-upload"));
+	var fd = new FormData();
+	fd.append('id', gi("file-upload-id").value);
+	fd.append('pid', gi("file-upload-pid").value);
+	for(var i = 0; i < files.length; i++)
+	{
+		fd.append('file[]', files[0]);
+	}
+	
 	f_http("lpd.php?action=upload",
 		function(data, params)
 		{
@@ -531,8 +543,8 @@ function f_file_drop(e)
 	e.stopPropagation();
 	e.preventDefault();
 
-	gi('upload').files = files;
-	f_upload();
+	//gi('upload').files = files;
+	f_upload(files);
 }
 
 function lpd_init()

@@ -63,10 +63,10 @@
 		<?php } ?>
 			</tbody>
 		</table>
-		<form method="post" id="file-upload" name="file-upload">		
-			<input type="hidden" id="file-upload-id" name="id" value="0"/>
-			<input type="hidden" name="pid" value="<?php eh($id); ?>"/>
-			<input id="upload" type="file" name="file[]" multiple="multiple" onchange="f_upload();" style="display: none"/>
+		<form method="post" id="file-upload" name="file-upload">
+			<input id="file-upload-id" type="hidden" name="id" value="0"/>
+			<input id="file-upload-pid" type="hidden" name="pid" value="<?php eh($id); ?>"/>
+			<input id="upload" type="file" name="file[]" multiple="multiple" onchange="f_files_selected();" style="display: none"/>
 		</form>
 		<div id="dropzone">Перетащите сюда или <a href="#" onclick="gi('file-upload-id').value = 0; gi('upload').click(); return false;">выберите</a> файлы для загрузки</div>
 		<script type="text/javascript">
