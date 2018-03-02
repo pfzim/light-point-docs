@@ -370,7 +370,7 @@ function f_upload(files)
 	fd.append('pid', gi("file-upload-pid").value);
 	for(var i = 0; i < files.length; i++)
 	{
-		fd.append('file[]', files[0]);
+		fd.append('file[]', files[i]);
 	}
 	
 	f_http("lpd.php?action=upload",

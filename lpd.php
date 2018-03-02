@@ -328,35 +328,25 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			$v_id = intval(@$_POST['id']);		// id of file for replace
 			$v_pid = intval(@$_POST['pid']);	// id of parent document
 
-			if(!$db->select_ex($doc, rpv("SELECT m.`pid` FROM `@docs` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $v_pid))
-				|| empty($_FILES['file']['tmp_name'][0])
-				|| !file_exists(@$_FILES['file']['tmp_name'][0])
-			)
-			{
-				$phpFileUploadErrors = array(
-					0 => 'There is no error, the file uploaded with success',
-					1 => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
-					2 => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
-					3 => 'The uploaded file was only partially uploaded',
-					4 => 'No file was uploaded',
-					6 => 'Missing a temporary folder',
-					7 => 'Failed to write file to disk.',
-					8 => 'A PHP extension stopped the file upload.'
-				);
+			$phpFileUploadErrors = array(
+				0 => 'There is no error, the file uploaded with success',
+				1 => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
+				2 => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
+				3 => 'The uploaded file was only partially uploaded',
+				4 => 'No file was uploaded',
+				6 => 'Missing a temporary folder',
+				7 => 'Failed to write file to disk.',
+				8 => 'A PHP extension stopped the file upload.'
+			);
 
-				if(isset($phpFileUploadErrors[intval(@$_FILES['file']['error'][0])]))
-				{
-					echo '{"code": 1, "message": "Failed upload: '.$phpFileUploadErrors[intval(@$_FILES['file']['error'][0])].'"}';
-				}
-				else
-				{
-					echo '{"code": 1, "message": "Failed upload"}';
-				}
+			if(!$db->select_ex($doc, rpv("SELECT m.`pid` FROM `@docs` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $v_pid)))
+			{
+				echo '{"code": 1, "message": "Failed upload #1"}';
 				exit;
 			}
 
 			assert_permission_ajax($doc[0][0], LPD_ACCESS_WRITE);
-			
+
 			$result_json = array(
 				'code' => 0,
 				'message' => 'Files added',
@@ -372,21 +362,34 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 			if($v_id)
 			{
+				if(empty($_FILES['file']['tmp_name'][0]) || !file_exists(@$_FILES['file']['tmp_name'][0]))
+				{
+					if(isset($_FILES['file']['error'][0]) && isset($phpFileUploadErrors[intval($_FILES['file']['error'][0])]))
+					{
+						echo '{"code": 1, "message": "Failed upload: '.$phpFileUploadErrors[intval($_FILES['file']['error'][0])].'"}';
+					}
+					else
+					{
+						echo '{"code": 1, "message": "Failed upload #2"}';
+					}
+					exit;
+				}
+
 				if(count($_FILES['file']['tmp_name']) > 1)
 				{
-					echo '{"code": 1, "message": "Too many files uploaded, upload one file"}';
+					echo '{"code": 1, "message": "Too many files uploaded, you can upload one file only"}';
 					exit;
 				}
 
 				if(!$db->select_ex($file, rpv("SELECT m.`name`, m.`create_date`, m.`modify_date`, m.`uid` FROM `@files` AS m WHERE m.`id` = # AND m.`deleted` = 0 LIMIT 1", $v_id)))
 				{
-					echo '{"code": 1, "message": "Failed upload. Error #1"}';
+					echo '{"code": 1, "message": "Failed upload. Error #3"}';
 					exit;
 				}
 
 				if(!$db->put(rpv("INSERT INTO `@files_history` (`pid`, `name`, `modify_date`, `uid`, `deleted`) VALUES (#, !, !, #, 0)", $v_id, $file[0][0], $file[0][2], $file[0][3])))
 				{
-					echo '{"code": 1, "message": "Failed upload. Error #2"}';
+					echo '{"code": 1, "message": "Failed upload. Error #4"}';
 					exit;
 				}
 				$last_id = $db->last_id();
@@ -395,13 +398,13 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 				if(!$db->put(rpv("UPDATE `@files` SET `name` = !, `modify_date` = NOW(), `uid` = # WHERE `id` = # LIMIT 1", @$_FILES['file']['name'][0], $uid, $v_id)))
 				{
-					echo '{"code": 1, "message": "Failed upload. Error #3"}';
+					echo '{"code": 1, "message": "Failed upload. Error #5"}';
 					exit;
 				}
 
 				if(!@move_uploaded_file(@$_FILES['file']['tmp_name'][0], $files_dir.'f'.$v_id))
 				{
-					echo '{"code": 1, "message": "Failed upload. Error #4"}';
+					echo '{"code": 1, "message": "Failed upload. Error #6"}';
 					exit;
 				}
 				
@@ -417,9 +420,22 @@ function php_mailer($to, $name, $subject, $html, $plain)
 			{
 				for($i = 0; $i < count($_FILES['file']['tmp_name']); $i++)
 				{
+					if(empty($_FILES['file']['tmp_name'][$i]) || !file_exists(@$_FILES['file']['tmp_name'][$i]))
+					{
+						if(isset($_FILES['file']['error'][$i]) && isset($phpFileUploadErrors[intval($_FILES['file']['error'][$i])]))
+						{
+							echo '{"code": 1, "message": "Failed upload: '.$phpFileUploadErrors[intval($_FILES['file']['error'][$i])].'"}';
+						}
+						else
+						{
+							echo '{"code": 1, "message": "Failed upload #7"}';
+						}
+						exit;
+					}
+					
 					if(!$db->put(rpv("INSERT INTO `@files` (`pid`, `name`, `create_date`, `modify_date`, `uid`, `deleted`) VALUES (#, !, NOW(), NOW(), #, 0)", $v_pid, @$_FILES['file']['name'][$i], $uid)))
 					{
-						echo '{"code": 1, "message": "Failed upload. Error #5"}';
+						echo '{"code": 1, "message": "Failed upload. Error #8"}';
 						exit;
 					}
 
@@ -427,7 +443,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 
 					if(!@move_uploaded_file($_FILES['file']['tmp_name'][$i], $files_dir.'f'.$v_id))
 					{
-						echo '{"code": 1, "message": "Failed upload. Error #6"}';
+						echo '{"code": 1, "message": "Failed upload. Error #9"}';
 						exit;
 					}
 					
