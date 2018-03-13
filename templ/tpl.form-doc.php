@@ -52,12 +52,12 @@
 				<div class="form-title"><label for="info">Описание:</label></div>
 				<input class="form-field" id="info" name="info" type="edit" value=""/><br />
 				<div id="info-error" class="form-error"></div>
-				</form>
 				<div class="f-right">
-					<button class="button-accept" type="button" onclick="f_save('document');">Сохранить</button>
+					<button class="button-accept" type="submit" onclick="return f_save('document');">Сохранить</button>
 					&nbsp;
-					<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.style.display='none'">Отмена</button>
+					<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.style.display='none'">Отмена</button>
 				</div>
+				</form>
 			</div>
 		</div>
 <script src="moment.js"></script>

@@ -147,13 +147,14 @@ function f_save(form_id)
 	var el = gi(form_id);
 	for(i = 0; i < el.elements.length; i++)
 	{
-		var err = gi(el.elements[i].name + '-error');
-		if(err)
-		{
-			err.style.display='none';
-		}
 		if(el.elements[i].name)
 		{
+			var err = gi(el.elements[i].name + '-error');
+			if(err)
+			{
+				err.style.display='none';
+			}
+			
 			if(el.elements[i].type == 'checkbox')
 			{
 				if(el.elements[i].checked)
@@ -208,6 +209,8 @@ function f_save(form_id)
 		'application/x-www-form-urlencoded',
 		json2url(form_data)
 	);
+	
+	return false;
 }
 
 function f_update_doc_row(data)
@@ -291,28 +294,32 @@ function f_edit(ev, form_id)
 		var el = gi(form_id);
 		for(i = 0; i < el.elements.length; i++)
 		{
-			var err = gi(el.elements[i].name + '-error');
-			if(err)
+			if(el.elements[i].name)
 			{
-				err.style.display='none';
-			}
-			if(el.elements[i].name == 'id')
-			{
-				el.elements[i].value = id;
-			}
-			else if(el.elements[i].name == 'pid')
-			{
-				el.elements[i].value = g_pid;
-			}
-			else
-			{
-				if(el.elements[i].type == 'checkbox')
+				var err = gi(el.elements[i].name + '-error');
+				if(err)
 				{
-					el.elements[i].checked = false;
+					err.style.display='none';
+				}
+				
+				if(el.elements[i].name == 'id')
+				{
+					el.elements[i].value = id;
+				}
+				else if(el.elements[i].name == 'pid')
+				{
+					el.elements[i].value = g_pid;
 				}
 				else
 				{
-					el.elements[i].value = '';
+					if(el.elements[i].type == 'checkbox')
+					{
+						el.elements[i].checked = false;
+					}
+					else
+					{
+						el.elements[i].value = '';
+					}
 				}
 			}
 		}
